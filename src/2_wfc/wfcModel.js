@@ -26,6 +26,32 @@ export default class WFCModel {
 	 */
 	generate(width, height, maxAttempts, logProgress, profile) {
 		if (!this.imageLearner.patterns) throw new Error("Patterns must be learned before generation");
-		return this.constraintSolver.solve(this.imageLearner.patterns, this.imageLearner.weights, this.imageLearner.adjacencies, width, height, maxAttempts, logProgress, profile);
+		const result = this.constraintSolver.solve(this.imageLearner.patterns, this.imageLearner.weights, this.imageLearner.adjacencies, width, height, maxAttempts, logProgress, profile);
+		if (result) return this.generateImage();
+		else return null;
+	}
+
+	/**
+	 * Builds and returns an image using the learned patterns and solved wave matrix.
+	 * @returns {TilemapImage}
+	 */
+	generateImage() {
+		// Build the image using the top left tile of each cell's pattern.
+
+		const patterns = this.imageLearner.patterns;
+		const waveMatrix = this.constraintSolver.waveMatrix;
+
+		const image = [];
+		for (let y = 0; y < waveMatrix.length; y++) image[y] = [];
+
+		for (let y = 0; y < waveMatrix.length; y++) {
+		for (let x = 0; x < waveMatrix[0].length; x++) {
+			const possiblePatterns_Array = waveMatrix[y][x].toArray();
+			const i = possiblePatterns_Array[0];	// should be guaranteed to only have 1 possible pattern
+			const tileID = patterns[i][0][0];
+			image[y][x] = tileID;
+		}}
+
+		return image;
 	}
 }

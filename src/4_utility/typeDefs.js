@@ -1,9 +1,8 @@
 /*
 	Create global type definitions to be used by other project files here
 	These typedefs simply exist to improve code readability and editor support, especially for JSDoc comments
-
-	The "include" directive in jsconfig.json ensures that this file is always loaded by VS Code, even if it’s not open
-	That way, these typedefs will always be known by IntelliSense
+	
+	See jsconfigExplained.txt for more information about this file
 */
 
 // Imports (for the following typedefs to use)
@@ -15,7 +14,7 @@
  * 
  * @typedef {number[][]} TilemapImage A 2D matrix of tile IDs that represents a layer of a tilemap.
  * 
- * @typedef {number[][]} Pattern An 2D NxN matrix of tile IDs.
+ * @typedef {number[][]} Pattern A 2D NxN matrix of tile IDs.
  *
  * @typedef {Bitmask} AdjacentPatternsBitmask Given a pattern A, stores which patterns are adjacent to A in a single direction.
  * @typedef {AdjacentPatternsBitmask[]} AdjacentPatternsMap An array of four AdjacentPatternsBitmasks. Given a pattern A, stores which patterns are adjacent to A in each of the four directions.

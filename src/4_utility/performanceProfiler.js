@@ -10,7 +10,7 @@ export default class PerformanceProfiler {
 	 */
 	register(func) {
 		if (!func.name) throw new Error("The function cannot be anonymous (nameless)");
-		if (func.original) return func;	// prevent double-wrapping
+		if (func.originalVersion) return func;	// prevent double-wrapping
 
 		const profiler = this;
 
@@ -39,7 +39,7 @@ export default class PerformanceProfiler {
 			return result;
 		}
 	
-		func_Registered.unregistered = func; // for unwrapping
+		func_Registered.originalVersion = func; // for unwrapping
 		return func_Registered;
 	}
 
@@ -49,7 +49,7 @@ export default class PerformanceProfiler {
 	 * @returns {Function} The unregistered (original) version of func().
 	 */
 	unregister(func) {
-		return func.unregistered ?? func;	// only unwrap if func is wrapped
+		return func.originalVersion ?? func;	// only unwrap if func is wrapped
 	}
 
 	/** Console logs the performance data of all functions profiled. */

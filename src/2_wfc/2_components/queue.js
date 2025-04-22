@@ -45,6 +45,7 @@ export default class Queue {
 
 /** A node of a linked list. */
 class Node {
+	/** @param {any} data */
 	constructor(data) {
 		this.data = data;
 		this.next = null;
