@@ -66,14 +66,55 @@ class FenceGenerator {
         }
     }
 
-    setTransitions() {
-        // corners
-        let topLeft = XYZ;
-        let topRight = XYZ;
-
+    setCornerTiles() {
         // go row by row, find the tiles closest to each of the four corners per row
-        for (let i = 0; i < this.tileArray[0].length; i++) {
+        
+        // TOP RIGHT
+        for (let i = 0; i < this.tileArray.length; i++) {
+            for (let j = 0; j < this.tileArray[0].length; j++) {
+                if (this.tileArray[i][j].id != this.BLANK) {
+                    this.tileArray[i][j].id = this.FENCE_UPRIGHT;
+                }
+            }
+        }
+        // TOP LEFT
+        for (let i = 0; i < this.tileArray.length; i++) {
+            for (let j = this.tileArray[0].length - 1; j >= 0; j--) {
+                if (this.tileArray[i][j].id != this.BLANK) {
+                    this.tileArray[i][j].id = this.FENCE_UPLEFT;
+                }
+            }
+        }
+        // BOTTOM RIGHT
+        for (i = this.tileArray.length - 1; i >= 0; i--) {
+            for (let j = 0; j < this.tileArray[0].length; j++) {
+                if (this.tileArray[i][j].id != this.BLANK) {
+                    this.tileArray[i][j].id = this.FENCE_DOWNRIGHT;
+                }
+            }
+        }
+        // BOTTOM LEFT
+        for (i = this.tileArray.length - 1; i >= 0; i--) {
+            for (let j = this.tileArray[0].length - 1; j >= 0; j--) {
+                if (this.tileArray[i][j].id != this.BLANK) {
+                    this.tileArray[i][j].id = this.FENCE_DOWNLEFT;
+                }
+            }
+        }
+    }
 
+    setTransitions() {
+         // go row by row; nothing above the tile being examined = upper tile; nothing below = lower tile
+         // reminder that there are no fence tiles that are upper-lower
+        for (let i = 0; i < this.tileArray.length; i++) {
+            for (let j = 0; j < this.tileArray[0].length; j++) {
+                if (i == 0) {
+                    this.tileArray[i][j].id = this.FENCE_UP;
+                }
+                if (j == 0) {
+                    
+                }
+            }
         }
     }
 }
