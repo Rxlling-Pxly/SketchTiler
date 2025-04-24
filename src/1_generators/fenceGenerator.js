@@ -1,13 +1,13 @@
 // Takes in an array of tile coordinates
-class FenceGenerator {
-    FENCE_UP = 1;
-    FENCE_DOWN = 2;
-    FENCE_RIGHT = 3;
-    FENCE_LEFT = 4;
-    FENCE_UPRIGHT = 5;
-    FENCE_UPLEFT = 6;
-    FENCE_DOWNRIGHT = 7;
-    FENCE_DOWNLEFT = 8;
+export default class FenceGenerator {
+    FENCE_UP = 10;
+    FENCE_DOWN = 11;
+    FENCE_RIGHT = 12;
+    FENCE_LEFT = 13;
+    FENCE_UPRIGHT = 14;
+    FENCE_UPLEFT = 15;
+    FENCE_DOWNRIGHT = 16;
+    FENCE_DOWNLEFT = 17;
     BLANK = 0;
 
 
@@ -15,6 +15,11 @@ class FenceGenerator {
         // contains list of tiles where the sketch touched
         this.outlineTileList = coordinateList;
         this.tileArray = [];
+
+        this.getBoundingBox();
+        this.makeInitialTileArray();
+        this.setCornerTiles();
+        this.setTransitions();
 	}
 
     // Get the overall bounding box of the region
@@ -58,7 +63,7 @@ class FenceGenerator {
 
                 const tileInfo = {
                     id: tileID,
-                    coords: {j, i}
+                    coords: {x: j, y: i}
                 }
                 
                 this.tileArray[i].push(tileInfo);
@@ -104,15 +109,40 @@ class FenceGenerator {
     }
 
     setTransitions() {
-         // go row by row; nothing above the tile being examined = upper tile; nothing below = lower tile
-         // reminder that there are no fence tiles that are upper-lower
+        // go row by row; nothing above the tile being examined = upper tile; nothing below = lower tile
+        // reminder that there are no fence tiles that are upper-lower
         for (let i = 0; i < this.tileArray.length; i++) {
             for (let j = 0; j < this.tileArray[0].length; j++) {
-                if (i == 0) {
+                // BASIC DIRECTIONS
+                if (i == 0) { // up
                     this.tileArray[i][j].id = this.FENCE_UP;
                 }
-                if (j == 0) {
-                    
+                if (i == this.tileArray.length - 1) { // down
+                    this.tileArray[i][j].id = this.FENCE_DOWN;
+                }
+                if (j == 0) { // left
+                    this.tileArray[i][j].id = this.FENCE_LEFT;
+                }
+                if (j == this.tileArray[0].length - 1) { // right
+                    this.tileArray[i][j].id = this.FENCE_RIGHT;
+                }
+
+                // CORNER TRANSITIONS
+                if (i == 0) {
+                    if (j == 0 || this.tileArray[i][j - 1].id == this.BLANK) { // if there are no immediate tiles to the left
+                        this.tileArray[i][j].id = this.FENCE_UPLEFT;
+                    }
+                    else if (j == this.tileArray[0].length || this.tileArray[i][j + 1].id == this.BLANK) { // check right
+                        this.tileArray[i][j].id = this.FENCE_UPRIGHT;
+                    }
+                }
+                if (i == this.tileArray.length - 1) {
+                    if (j == 0 || this.tileArray[i][j - 1].id == this.BLANK) { // if there are no immediate tiles to the left
+                        this.tileArray[i][j].id = this.FENCE_DOWNLEFT;
+                    }
+                    else if (j == this.tileArray[0].length || this.tileArray[i][j + 1].id == this.BLANK) { // check right
+                        this.tileArray[i][j].id = this.FENCE_DOWNRIGHT;
+                    }
                 }
             }
         }
