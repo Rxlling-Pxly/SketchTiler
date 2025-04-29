@@ -1,16 +1,31 @@
 import DIRECTIONS from "./directions.js";
 import Bitmask from "./bitmask.js";
-import PerformanceProfiler from "../../4_utility/performanceProfiler.js";
+import PerformanceProfiler from "../../4_Utility/performanceProfiler.js";
 
 export default class ImageLearner {
-	/** @type {Pattern[]} */
+	/**
+	 * Stores the tiles of every pattern, where element i is the tiles of pattern i.
+	 * @type {Pattern[]}
+	 */
 	patterns;
 
-	/** @type {number[]} */
+	/**
+	 * Stores the weight of every pattern, where element i is the weight of pattern i.
+	 * @type {number[]}
+	 */
 	weights;
 
-	/** @type {AdjacentPatternsMap[]} */
+	/**
+	 * Stores the adjacencies of every pattern, where element i is the adjacencies of pattern i.
+	 * @type {AdjacentPatternsMap[]}
+	 */
 	adjacencies;
+
+	/**
+	 * For each tile, stores which patterns contain that tile as its top left tile.
+	 * @type {Map<number, TilePatternsBitmask>}
+	 */
+	tilesToPatterns;
 
 	performanceProfiler = new PerformanceProfiler();
 
@@ -24,12 +39,14 @@ export default class ImageLearner {
 		this.patterns = [];
 		this.weights = [];
 		this.adjacencies = [];
+		this.tilesToPatterns = new Map();
 
 		this.performanceProfiler.clearData();
 		this.profileFunctions(profile)
 
 		this.getPatternsAndWeights(images, N);
 		this.getAdjacencies();
+		this.getTilesToPatterns();
 
 		if (profile) this.performanceProfiler.logData();
 	}
@@ -39,17 +56,25 @@ export default class ImageLearner {
 	 * @param {bool} value Whether to profile (register) or not (unregister).
 	 */
 	profileFunctions(value) {
+		/*
+			When adding functions, be wary of adding functions that get called by other functions
+			(e.g. if you were to add getLeastEntropyCell() and getCellEntropy())
+			If you do this, the combined total duration displayed by the profiler will be incorrect
+		*/
+
 		if (value) {
 			this.getPatternsAndWeights = this.performanceProfiler.register(this.getPatternsAndWeights);
-			this.getPattern = this.performanceProfiler.register(this.getPattern);
+			//this.getPattern = this.performanceProfiler.register(this.getPattern);
 			this.getAdjacencies = this.performanceProfiler.register(this.getAdjacencies);
-			this.isAdjacent = this.performanceProfiler.register(this.isAdjacent);
+			//this.isAdjacent = this.performanceProfiler.register(this.isAdjacent);
+			this.getTilesToPatterns = this.performanceProfiler.register(this.getTilesToPatterns);
 		}
 		else {
 			this.getPatternsAndWeights = this.performanceProfiler.unregister(this.getPatternsAndWeights);
-			this.getPattern = this.performanceProfiler.unregister(this.getPattern);
+			//this.getPattern = this.performanceProfiler.unregister(this.getPattern);
 			this.getAdjacencies = this.performanceProfiler.unregister(this.getAdjacencies);
-			this.isAdjacent = this.performanceProfiler.unregister(this.isAdjacent);
+			//this.isAdjacent = this.performanceProfiler.unregister(this.isAdjacent);
+			this.getTilesToPatterns = this.performanceProfiler.unregister(this.getTilesToPatterns);
 		}
 	}
 
@@ -175,5 +200,14 @@ export default class ImageLearner {
 			if (tile1ID !== tile2ID) return false;
 		}}
 		return true;
+	}
+
+	/** Populates this.tilesToPatterns. */
+	getTilesToPatterns() {
+		for (let i = 0; i < this.patterns.length; i++) {
+			const tileID = this.patterns[i][0][0];
+			if (this.tilesToPatterns.has(tileID)) this.tilesToPatterns.get(tileID).setBit(i);
+			else this.tilesToPatterns.set(tileID, new Bitmask(this.patterns.length).setBit(i));
+		}
 	}
 }

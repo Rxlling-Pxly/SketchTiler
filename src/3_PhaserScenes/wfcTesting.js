@@ -1,6 +1,6 @@
 import Phaser from "../../lib/phaserModule.js"
-import WFCModel from "../2_wfc/wfcModel.js";
-import IMAGES from "../2_wfc/images.js"
+import WFCModel from "../2_WFC/1_Model/wfcModel.js";
+import IMAGES from "../2_WFC/2_Input/images.js";
 
 export default class WFCTesting extends Phaser.Scene {
 	displayedMapID = 3;	// check assets folder to see all maps
@@ -10,6 +10,7 @@ export default class WFCTesting extends Phaser.Scene {
 	N = 2;
 	profileLearning = false;
 
+	// width & height for entire maps should have an 8:5 ratio (e.g. 24x15, 40x25)
 	width = 24;
 	height = 15;
 	maxAttempts = 10;
@@ -80,6 +81,21 @@ export default class WFCTesting extends Phaser.Scene {
 
 		console.log("Using model for structures");
 		this.model.learn(IMAGES.STRUCTURES, this.N, this.profileLearning);
+
+		//this.model.setTile(0, this.height-1, 73);	// brown BL corner
+		//this.model.setTile(this.width-1, this.height-1, 76)	// brown BR corner
+
+		//this.model.setTile(0, this.height-1, 77);	// blue BL corner
+		//this.model.setTile(this.width-1, this.height-1, 80)	// blue BR corner
+
+		//this.model.setTile(0, 0, 49)	// blue roof TL corner
+		//this.model.setTile(this.width-1, 0, 51)	// blue roof TR corner
+		//this.model.setTile(this.width-1, 0, 52)	// blue roof TR chimney
+
+		//this.model.setTile(0, 0, 53)	// orange roof TL corner
+		//this.model.setTile(this.width-1, 0, 55)	// orange roof TR corner
+		//this.model.setTile(this.width-1, 0, 56)	// orange roof TRchimney
+
 		const structuresImage = this.model.generate(this.width, this.height, this.maxAttempts, this.logProgress, this.profileSolving);
 		if (!structuresImage) return;
 

@@ -1,19 +1,22 @@
 import DIRECTIONS from "./directions.js";
 import Bitmask from "./bitmask.js";
 import Queue from "./queue.js";
-import PerformanceProfiler from "../../4_utility/performanceProfiler.js";
+import PerformanceProfiler from "../../4_Utility/performanceProfiler.js";
 
 export default class ConstraintSolver {
-	/** @type {Cell[][]} */
+	/**
+	 * Represents the possibility space of an image in the middle of generation.
+	 * @type {Cell[][]}
+	 */
 	waveMatrix;
 
 	performanceProfiler = new PerformanceProfiler();
 
 	/**
 	 * Attempts to solve this.waveMatrix based on learned pattern data.
-	 * @param {Pattern[]} patterns
 	 * @param {number[]} weights
 	 * @param {AdjacentPatternsMap[]} adjacencies
+	 * @param {SetTileInstruction[]} setTiles
 	 * @param {number} width The width to set this.waveMatrix to.
 	 * @param {number} height The height to set this.waveMatrix to.
 	 * @param {number} maxAttempts
@@ -21,46 +24,35 @@ export default class ConstraintSolver {
 	 * @param {bool} profile Whether to profile the performance of this function or not.
 	 * @returns {bool} Whether the attempt was successful or not.
 	 */
-	solve(patterns, weights, adjacencies, width, height, maxAttempts, logProgress, profile) {
+	solve(weights, adjacencies, setTileInstructions, width, height, maxAttempts, logProgress, profile) {
 		this.performanceProfiler.clearData();
 		this.profileFunctions(profile);
 
-		if (logProgress) console.log("starting");
+		this.initializeWaveMatrix(weights.length, width, height);
+		this.setTiles(setTileInstructions, adjacencies);
 
-		this.initializeWaveMatrix(patterns.length, width, height);
 		let numAttempts = 1;
-
-		/*
-			Since the very first cell to observe and propagate will always be a random one
-			We can just choose a random cell instead of using getLeastEntropyUnsolvedCellPosition() to get one
-			This means we get to skip a getLeastEntropyUnsolvedCellPosition() call
-			Which is nice because calling that function on an initialized wave matrix (every cell has all patterns possible) gives it worst case runtime
-		*/
-		let y = Math.floor(Math.random() * height);	// random in range [0, outputHeight-1]
-		let x = Math.floor(Math.random() * width);	// random in range [0, outputWidth-1]
-
 		while (numAttempts <= maxAttempts) {	// use <= so maxAttempts can be 1
+			const [y, x] = this.getLeastEntropyUnsolvedCellPosition(weights);
+			if (y === -1 && x === -1) {
+				if (logProgress) console.log(`solved in ${numAttempts} attempt(s)`);
+				if (profile) this.performanceProfiler.logData();
+				return true;
+			}
+
 			this.observe(y, x, weights);
 
 			if (logProgress) console.log("propagating...");
-			let contradictionCreated = this.propagate(y, x, adjacencies);
+			const contradictionCreated = this.propagate(y, x, adjacencies);
 			if (contradictionCreated) {
-				this.initializeWaveMatrix(patterns.length, width, height);
-				y = Math.floor(Math.random() * height);	// random in range [0, outputHeight-1]
-				x = Math.floor(Math.random() * width);	// random in range [0, outputWidth-1]
+				this.initializeWaveMatrix(weights.length, width, height);
+				this.setTiles(setTileInstructions, adjacencies);
 				numAttempts++;
-				continue;
-			}
-
-			[y, x] = this.getLeastEntropyUnsolvedCellPosition(weights);
-			if (y === -1 && x === -1) {
-				if (logProgress) console.log("solved! took " + numAttempts + " attempt(s)");
-				if (profile) this.performanceProfiler.logData();
-				return true;
 			}
 		}
 
 		if (logProgress) console.log("max attempts reached");
+		if (profile) this.performanceProfiler.logData();
 		return false;
 	}
 
@@ -69,19 +61,27 @@ export default class ConstraintSolver {
 	 * @param {bool} value Whether to profile (register) or not (unregister).
 	 */
 	profileFunctions(value) {
+		/*
+			When adding functions, be wary of adding functions that get called by other functions
+			(e.g. if you were to add getLeastEntropyCell() and getCellEntropy())
+			If you do this, the combined total duration displayed by the profiler will be incorrect
+		*/
+		
 		if (value) {
 			this.initializeWaveMatrix = this.performanceProfiler.register(this.initializeWaveMatrix);
+			this.setTiles = this.performanceProfiler.register(this.setTiles);
 			this.observe = this.performanceProfiler.register(this.observe);
 			this.propagate = this.performanceProfiler.register(this.propagate);
 			this.getLeastEntropyUnsolvedCellPosition = this.performanceProfiler.register(this.getLeastEntropyUnsolvedCellPosition);
-			this.getShannonEntropy = this.performanceProfiler.register(this.getShannonEntropy);
+			//this.getShannonEntropy = this.performanceProfiler.register(this.getShannonEntropy);
 		}
 		else {
 			this.initializeWaveMatrix = this.performanceProfiler.unregister(this.initializeWaveMatrix);
+			this.setTiles = this.performanceProfiler.unregister(this.setTiles);
 			this.observe = this.performanceProfiler.unregister(this.observe);
 			this.propagate = this.performanceProfiler.unregister(this.propagate);
 			this.getLeastEntropyUnsolvedCellPosition = this.performanceProfiler.unregister(this.getLeastEntropyUnsolvedCellPosition);
-			this.getShannonEntropy = this.performanceProfiler.unregister(this.getShannonEntropy);
+			//this.getShannonEntropy = this.performanceProfiler.unregister(this.getShannonEntropy);
 		}
 	}
 
@@ -102,6 +102,23 @@ export default class ConstraintSolver {
 		for (let x = 0; x < width; x++) {
 			this.waveMatrix[y][x] = Bitmask.createCopy(allPatternsPossible);
 		}}
+	}
+
+	/**
+	 * Executes the user's set tile instructions.
+	 * @param {SetTileInstruction[]} setTileInstructions 
+	 * @param {AdjacentPatternsMap[]} adjacencies
+	 */
+	setTiles(setTileInstructions, adjacencies) {
+		for (const [y, x, tilePatternsBitmask] of setTileInstructions) {
+			if (y < 0 || y > this.waveMatrix.length-1 || x < 0 || x > this.waveMatrix[0].length-1) {
+				console.warn("A set tile instruction asks for a position outside of the wave matrix. Ignoring this instruction.");
+				continue;
+			}
+			this.waveMatrix[y][x] = Bitmask.createCopy(tilePatternsBitmask);
+			const contradictionCreated = this.propagate(y, x, adjacencies);
+			if (contradictionCreated) throw new Error("User's set tiles formed a contradiction.");
+		}
 	}
 
 	/**
@@ -174,8 +191,7 @@ export default class ConstraintSolver {
 				const x2 = x1+dx;
 
 				// Don't go out of bounds
-				if (y2 < 0 || y2 > this.waveMatrix.length-1) continue;
-				if (x2 < 0 || x2 > this.waveMatrix[0].length-1) continue;
+				if (y2 < 0 || y2 > this.waveMatrix.length-1 || x2 < 0 || x2 > this.waveMatrix[0].length-1) continue;
 
 				const cell2_PossiblePatterns_Bitmask = this.waveMatrix[y2][x2];
 
@@ -190,7 +206,7 @@ export default class ConstraintSolver {
 				const contradictionCreated = cell2_NewPossiblePatterns_Bitmask.isEmpty();
 				if (contradictionCreated) return true;
 				
-				const cell2Changed = !(Bitmask.EQUALS(cell2_PossiblePatterns_Bitmask, cell2_NewPossiblePatterns_Bitmask));
+				const cell2Changed = !Bitmask.EQUALS(cell2_PossiblePatterns_Bitmask, cell2_NewPossiblePatterns_Bitmask);
 				if (cell2Changed) {
 					this.waveMatrix[y2][x2] = cell2_NewPossiblePatterns_Bitmask;
 					queue.enqueue([y2, x2]);
@@ -221,9 +237,7 @@ export default class ConstraintSolver {
 				leastEntropy = entropy;
 				leastEntropyCellPositions = [[y, x]];
 			}
-			else if (entropy === leastEntropy) {
-				leastEntropyCellPositions.push([y, x]);
-			}
+			else if (entropy === leastEntropy) leastEntropyCellPositions.push([y, x]);
 		}}
 
 		const len = leastEntropyCellPositions.length;

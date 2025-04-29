@@ -1,0 +1,35 @@
+{ "compressionlevel":-1,
+ "height":4,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[53, 54, 54, 56, 0, 0,
+            65, 66, 66, 67, 54, 55,
+            77, 89, 89, 80, 66, 67,
+            77, 91, 92, 80, 77, 80],
+         "height":4,
+         "id":1,
+         "name":"Tile Layer 1",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":6,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":2,
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.10.2",
+ "tileheight":16,
+ "tilesets":[
+        {
+         "firstgid":1,
+         "source":"tiny-town.tsx"
+        }],
+ "tilewidth":16,
+ "type":"map",
+ "version":"1.10",
+ "width":6
+}

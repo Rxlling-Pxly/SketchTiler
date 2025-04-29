@@ -1,0 +1,44 @@
+{ "compressionlevel":-1,
+ "height":4,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[53, 54, 54, 54, 56,
+            65, 68, 66, 68, 67,
+            77, 89, 78, 89, 80,
+            77, 78, 90, 78, 80],
+         "height":4,
+         "id":1,
+         "name":"Tile Layer 1",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":5,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":2,
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.10.2",
+ "tileheight":16,
+"tilesets":[
+        {
+         "columns":12,
+         "firstgid":1,
+         "image":"tilemap_packed.png",
+         "imageheight":176,
+         "imagewidth":192,
+         "margin":0,
+         "name":"tiny-town",
+         "spacing":0,
+         "tilecount":132,
+         "tileheight":16,
+         "tilewidth":16
+        }],
+ "tilewidth":16,
+ "type":"map",
+ "version":"1.10",
+ "width":5
+}

@@ -66,6 +66,7 @@ export default class Bitmask {
 	setBit(i) {
 		const ai = Math.floor(i/32);
 		this.array[ai] |= Bitmask.indexToSubBitmask(i);
+		return this;	// so the caller can call this function on a new Bitmask in one line (ex: const b = new Bitmask(n).setBit(i))
 	}
 
 	/** Sets all bits to 0. */

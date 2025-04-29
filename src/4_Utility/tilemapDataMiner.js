@@ -1,8 +1,8 @@
 // Used to extract the tile ID matrices from a tilemap's layers.
 
-import Phaser from "../../lib/phaser.module.js"
+import Phaser from "../../lib/phaserModule.js"
 
-export class TilemapDataMiner extends Phaser.Scene {
+export default class TilemapDataMiner extends Phaser.Scene {
 	tilemapLayers = [];
 	currentTilemapIndex = 0;
 
@@ -11,9 +11,9 @@ export class TilemapDataMiner extends Phaser.Scene {
 	}
 
 	preload() {
-		this.load.setPath("./assets/");
-		this.load.image("tilemap_tiles", "tilemap_packed.png");
-		this.load.tilemapTiledJSON("tinyTownMap", "tinyTownMap3.tmj");
+		this.load.setPath("../../assets/");
+		this.load.image("tilemap_tiles", "tinyTown_Tilemap_Packed.png");
+		this.load.tilemapTiledJSON("tinyTownMap", "map3.tmj");
 	}
 
 	create()
@@ -170,7 +170,7 @@ export class TilemapDataMiner extends Phaser.Scene {
 		<h2>Controls</h2>
 		Change Tilemap: LEFT/RIGHT
 		`;
-		document.getElementById("description").innerHTML = controls;
+
 	}
 
 	/** @param {number} di delta index */
