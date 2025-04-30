@@ -23,7 +23,8 @@ const IMAGES = {
 		...MAP2.HOUSES,
 		...MAP3.HOUSES,
 		...HOUSES
-		//HOUSES[HOUSES.length -1]
+		//HOUSES[HOUSES.length -2],
+		//HOUSES[HOUSES.length -1],
 	]
 };
 export default IMAGES;
