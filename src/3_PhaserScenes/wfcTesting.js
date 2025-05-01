@@ -11,8 +11,8 @@ export default class WFCTesting extends Phaser.Scene {
 	profileLearning = false;
 
 	// width & height for entire maps should have an 8:5 ratio (e.g. 24x15, 40x25)
-	width = 7;
-	height = 6;
+	width = 4;
+	height = 8;
 	maxAttempts = 10;
 	logProgress = true;
 	profileSolving = true;
@@ -92,7 +92,7 @@ export default class WFCTesting extends Phaser.Scene {
 		//this.model.setTile(this.width-1, 0, 51)	// blue roof TR corner
 		//this.model.setTile(this.width-1, 0, 52)	// blue roof TR chimney
 
-		this.model.setTile(0, 0, 53)	// orange roof TL corner
+		//this.model.setTile(0, 0, 53)	// orange roof TL corner
 		//this.model.setTile(this.width-1, 0, 55)	// orange roof TR corner
 		//this.model.setTile(this.width-1, 0, 56)	// orange roof TRchimney
 
