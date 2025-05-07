@@ -38,9 +38,8 @@ export default class Autotiler extends Phaser.Scene {
       });
       this.groundMap.createLayer(0, this.tileset, 0, 0);
 
-      this.structsModel.clearSetTiles();
+      //this.structsModel.clearSetTiles();
 
-      /*
       const structsMapData = [];
       for (let y = 0; y < TILEMAP.HEIGHT; y++) {
         structsMapData[y] = [];
@@ -48,7 +47,6 @@ export default class Autotiler extends Phaser.Scene {
           structsMapData[y][x] = -1;
         }
       }
-      */
 
       for (const structure of Object.values(e.detail)) {
         if (!structure.strokes) continue;
@@ -62,8 +60,8 @@ export default class Autotiler extends Phaser.Scene {
             for (let x = 0; x < boundingBox.width; x++) {
               const dy = y + boundingBox.topLeft.y;
               const dx = x + boundingBox.topLeft.x;
-              this.structsModel.setTile(dx, dy, [struct[y][x]]);
-              //structsMapData[dy][dx] = struct[y][x];
+              //this.structsModel.setTile(dx, dy, [struct[y][x]]);
+              structsMapData[dy][dx] = struct[y][x];
             }}
           }
         } else {
@@ -74,8 +72,8 @@ export default class Autotiler extends Phaser.Scene {
         }
       }
 
-      const structsMapData = this.structsModel.generate(TILEMAP.WIDTH, TILEMAP.HEIGHT, 10, true, true);
-      if (!structsMapData) throw new Error ("Contradiction created");
+      //const structsMapData = this.structsModel.generate(TILEMAP.WIDTH, TILEMAP.HEIGHT, 10, true, true);
+      //if (!structsMapData) throw new Error ("Contradiction created");
 
       if (this.structsMap) this.structsMap.destroy();
       this.structsMap = this.make.tilemap({
