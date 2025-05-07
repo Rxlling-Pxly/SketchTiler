@@ -19,9 +19,9 @@ const IMAGES = {
 		//MAP4.STRUCTURES
 	],
 	HOUSES: [
-		...MAP1.HOUSES,
-		...MAP2.HOUSES,
-		...MAP3.HOUSES,
+		//...MAP1.HOUSES,
+		//...MAP2.HOUSES,
+		//...MAP3.HOUSES,
 		...HOUSES
 		//HOUSES[HOUSES.length -2],
 		//HOUSES[HOUSES.length -1],
