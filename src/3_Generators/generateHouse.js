@@ -26,8 +26,8 @@ export default function generateHouse(boundingBox) {
 
 /**
  * Returns a random integer in the range [min, max). 
- * @param {number} min Must be an integer.
- * @param {number} max Must be an integer.
+ * @param {number} min Must be an integer, inclusive.
+ * @param {number} max Must be an integer, exclusive.
  * @returns {number}
 */
 function getRandIntInRange(min, max) {
