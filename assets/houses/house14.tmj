@@ -1,12 +1,4 @@
 { "compressionlevel":-1,
- "editorsettings":
-    {
-     "export":
-        {
-         "format":"json",
-         "target":"house17.tmj"
-        }
-    },
  "height":3,
  "infinite":false,
  "layers":[
@@ -33,7 +25,7 @@
          "name":"redBase-blueRoof",
          "opacity":1,
          "type":"tilelayer",
-         "visible":false,
+         "visible":true,
          "width":4,
          "x":0,
          "y":0
