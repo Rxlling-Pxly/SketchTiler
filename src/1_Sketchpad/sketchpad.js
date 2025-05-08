@@ -1,5 +1,5 @@
 import { chaikinSmooth, ramerDouglasPeucker } from "./lineCleanup.js";
-import { LineDisplayble, MouseDisplayable } from "./displayables.js";
+import { LineDisplayble, MouseDisplayable } from "./Displayables.js";
 import { getShape } from "./shapeDetection.js";
 
 const sketchCanvas = document.getElementById("sketch-canvas");
