@@ -64,7 +64,7 @@ export default class Autotiler extends Phaser.Scene {
       }
 
       this.createGroundMap()
-      this.createStructsMap_WFC();
+      //this.createStructsMap_WFC();
       this.createStructsMap_Sketch(sketchImage);
 
       console.log("Generation Complete");
