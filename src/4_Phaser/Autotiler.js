@@ -38,15 +38,15 @@ export default class Autotiler extends Phaser.Scene {
       });
       this.groundMap.createLayer(0, this.tileset, 0, 0);
 
-      //this.structsModel.clearSetTiles();
-
-      const structsMapData = [];
+      const structsMapData_Sketch = [];
       for (let y = 0; y < TILEMAP.HEIGHT; y++) {
-        structsMapData[y] = [];
+        structsMapData_Sketch[y] = [];
         for (let x = 0; x < TILEMAP.WIDTH; x++) {
-          structsMapData[y][x] = -1;
+          structsMapData_Sketch[y][x] = -1;
         }
       }
+
+      this.structsModel.clearSetTiles();
 
       for (const structure of Object.values(e.detail)) {
         if (!structure.strokes) continue;
@@ -60,8 +60,8 @@ export default class Autotiler extends Phaser.Scene {
             for (let x = 0; x < boundingBox.width; x++) {
               const dy = y + boundingBox.topLeft.y;
               const dx = x + boundingBox.topLeft.x;
-              //this.structsModel.setTile(dx, dy, [struct[y][x]]);
-              structsMapData[dy][dx] = struct[y][x];
+              structsMapData_Sketch[dy][dx] = struct[y][x];
+              this.structsModel.setTile(dx, dy, [struct[y][x]]);
             }}
           }
         } else {
@@ -72,16 +72,24 @@ export default class Autotiler extends Phaser.Scene {
         }
       }
 
-      //const structsMapData = this.structsModel.generate(TILEMAP.WIDTH, TILEMAP.HEIGHT, 10, true, true);
-      //if (!structsMapData) throw new Error ("Contradiction created");
+      const structsMapData_WFC = this.structsModel.generate(TILEMAP.WIDTH, TILEMAP.HEIGHT, 10, true, true);
+      if (!structsMapData_WFC) throw new Error ("Contradiction created");
 
-      if (this.structsMap) this.structsMap.destroy();
-      this.structsMap = this.make.tilemap({
-        data: structsMapData,
+      if (this.structsMap_Sketch) this.structsMap_Sketch.destroy();
+      this.structsMap_Sketch = this.make.tilemap({
+        data: structsMapData_Sketch,
         tileWidth: TILEMAP.TILE_WIDTH,
         tileHeight: TILEMAP.TILE_WIDTH
       });
-      this.structsMap.createLayer(0, this.tileset, 0, 0);
+      this.structsMap_Sketch.createLayer(0, this.tileset, 0, 0);
+
+      if (this.structsMap_WFC) this.structsMap_WFC.destroy();
+      this.structsMap_WFC = this.make.tilemap({
+        data: structsMapData_WFC,
+        tileWidth: TILEMAP.TILE_WIDTH,
+        tileHeight: TILEMAP.TILE_WIDTH
+      });
+      this.structsMap_WFC.createLayer(0, this.tileset, 0, 0).setAlpha(0.25);
 
       console.log("Generation Complete");
     });
