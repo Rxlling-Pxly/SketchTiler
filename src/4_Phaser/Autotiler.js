@@ -6,6 +6,8 @@ import getBoundingBox from "../3_Generators/getBoundingBox.js";
 import generateHouse from "../3_Generators/generateHouse.js";
 import generateForest from "../3_Generators/generateForest.js";
 
+const SUGGESTED_TILE_ALPHA = 0.25;  // must be between 0 and 1
+
 export default class Autotiler extends Phaser.Scene {
   constructor() {
     super("autotilerScene");
@@ -89,7 +91,7 @@ export default class Autotiler extends Phaser.Scene {
         tileWidth: TILEMAP.TILE_WIDTH,
         tileHeight: TILEMAP.TILE_WIDTH
       });
-      this.structsMap_WFC.createLayer(0, this.tileset, 0, 0).setAlpha(0.25);
+      this.structsMap_WFC.createLayer(0, this.tileset, 0, 0).setAlpha(SUGGESTED_TILE_ALPHA);
 
       console.log("Generation Complete");
     });
