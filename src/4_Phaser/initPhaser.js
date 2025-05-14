@@ -1,8 +1,8 @@
 import Phaser from "../../lib/PhaserModule.js";
 import TILEMAP from "./TILEMAP.js";
 //import Autotiler from "./Autotiler.js";
-//import Demo_Sketch from "./Demo_Sketch.js";
-import Demo_WFC from "./Demo_WFC.js";
+import Demo_Sketch from "./Demo_Sketch.js";
+//import Demo_WFC from "./Demo_WFC.js";
 //import HouseDataMiner2 from "../5_Utility/HouseDataMiner2.js";
 
 export default function initPhaser() {
@@ -15,6 +15,6 @@ export default function initPhaser() {
     //autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,	// comment out this line to not center
     //backgroundColor: "#ebebeb",
     render: { pixelArt: true },	// scale pixel art without blurring
-    scene: [Demo_WFC]
+    scene: [Demo_Sketch]
   });
 }
