@@ -1,4 +1,12 @@
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "format":"json",
+         "target":"house34.tmj"
+        }
+    },
  "height":6,
  "infinite":false,
  "layers":[
