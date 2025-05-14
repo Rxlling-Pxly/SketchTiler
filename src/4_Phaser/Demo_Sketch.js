@@ -1,5 +1,6 @@
 import Phaser from "../../lib/phaserModule.js";
 import { Regions } from "../1_Sketchpad/strokeToTiles.js";
+import generateHouse from "../3_Generators/generateHouse.js"
 
 export default class Demo_Sketch extends Phaser.Scene {
   constructor() {
@@ -10,9 +11,9 @@ export default class Demo_Sketch extends Phaser.Scene {
 
   // TODO: replace function calls with actual generators
   generator = {
-    House: (region) => console.log("TODO: link house generator", region),
-    Path: (region) => console.log("TODO: link path generator", region),
-    Fence: (region) => console.log("TODO: link fence generator", region),
+    House: (region) =>  generateHouse({width: region.width, height: region.height}), // ]console.log("TODO: link house generator", region),
+    Path: (region) =>   console.log("TODO: link path generator", region),
+    Fence: (region) =>  console.log("TODO: link fence generator", region),
     Forest: (region) => console.log("TODO: link forest generator", region),
   };
 
@@ -56,7 +57,8 @@ export default class Demo_Sketch extends Phaser.Scene {
         // `regionType` is either "box" or trace, and the associated
         //    `region` is either a min/max pair (for box) or
         //    an array of points (for trace)
-        this.generator[structType](region);
+        let meep = this.generator[structType](region);
+        console.log(meep)
       }
     }
   }
@@ -95,15 +97,18 @@ export default class Demo_Sketch extends Phaser.Scene {
     }
     // data should have {min: {x, y}, max: {x, y}}
     if (style === "box") {
-      let { min, max } = data;
+      let topLeft = {     // convert back to pixels to draw to canvas
+        x: data.topLeft.x * this.cellSize,
+        y: data.topLeft.y * this.cellSize,
+      };
       let box = {
-        width: Math.max(max.x - min.x, sz),
-        height: Math.max(max.y - min.y, sz),
+        width: data.width * this.cellSize,
+        height: data.height * this.cellSize
       };
 
       color = color.replace(/\#/g, "0x"); // make hex-formatted color readable for phaser
       this.fillTiles_gfx.fillStyle(color);
-      this.fillTiles_gfx.fillRect(min.x, min.y, box.width, box.height);
+      this.fillTiles_gfx.fillRect(topLeft.x, topLeft.y, box.width, box.height);
     }
   }
 }

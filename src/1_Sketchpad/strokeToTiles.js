@@ -19,7 +19,7 @@ export class Regions {
       let struct = this.sketch[structType];
 
       // only looking through structures (not other attributes) with points drawn
-      if (struct.info && struct.strokes && struct.strokes.length > 1) {
+      if (struct.info && struct.strokes && struct.strokes.length > 0) {
         result[structType] = [];
         let regionType = struct.info.region;
 
@@ -80,10 +80,10 @@ export class Regions {
     const boxB = this.getBoundingBox(strokeB);
 
     return (
-      boxA.min.x - threshold < boxB.max.x &&
-      boxA.max.x + threshold > boxB.min.x &&
-      boxA.min.y - threshold < boxB.max.y &&
-      boxA.max.y + threshold > boxB.min.y
+      boxA.topLeft.x - threshold < boxB.bottomRight.x &&
+      boxA.bottomRight.x + threshold > boxB.topLeft.x &&
+      boxA.topLeft.y - threshold < boxB.bottomRight.y &&
+      boxA.bottomRight.y + threshold > boxB.topLeft.y
     );
   }
 
@@ -118,12 +118,11 @@ export class Regions {
       }
     }
 
-    min = { x: min.x * this.cellSize, y: min.y * this.cellSize };
-    max = { x: max.x * this.cellSize, y: max.y * this.cellSize };
-
     return {
-      min: min,
-      max: max,
+      topLeft: { x: min.x, y: min.y },
+      bottomRight: { x: max.x, y: max.y },
+      width: 1 + max.x - min.x,
+      height: 1 + max.y - min.y
     };
   }
 
