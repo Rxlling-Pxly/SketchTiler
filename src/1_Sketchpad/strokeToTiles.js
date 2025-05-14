@@ -41,7 +41,7 @@ export class Regions {
   // takes an array of strokes and combines strokes within a threshold 
   //    from each other into a single stroke. Returns a new array with
   //    grouped strokes.
-  groupNearby(strokes, threshold = 40) {
+  groupNearby(strokes, threshold = 2) {
     const visited = new Array(strokes.length).fill(false);  // visit flags
     const result = [];
 
