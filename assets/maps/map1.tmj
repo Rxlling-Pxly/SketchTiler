@@ -120,7 +120,7 @@
         {
          "columns":12,
          "firstgid":1,
-         "image":"tilemap_packed.png",
+         "image":"..\/tinyTown_Tilemap_Packed.png",
          "imageheight":176,
          "imagewidth":192,
          "margin":0,

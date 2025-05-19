@@ -13,13 +13,13 @@ export default class TilemapDataMiner extends Phaser.Scene {
 	preload() {
 		this.load.setPath("../../assets/");
 		this.load.image("tilemap_tiles", "tinyTown_Tilemap_Packed.png");
-		this.load.tilemapTiledJSON("tinyTownMap", "map3.tmj");
+		this.load.tilemapTiledJSON("map", "maps/map4.tmj");
 	}
 
 	create()
 	{
 		// ENTER DATA HERE
-		const key = "tinyTownMap";
+		const key = "map";
 		const width = 40;	// in tiles
 		const height = 25;	// in tiles
 		const layerNames = [

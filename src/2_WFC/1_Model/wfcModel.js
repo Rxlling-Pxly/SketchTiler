@@ -35,6 +35,7 @@ export default class WFCModel {
   setTile(x, y, ids) {
     const combinedTilePatternsBitmask = new Bitmask(this.imageLearner.patterns.length);
     for (const id of ids) {
+      if (!this.imageLearner.tilesToPatterns.has(id)) throw new Error(`ID ${id} not found in patterns.`);
       const tilePatternsBitmask = this.imageLearner.tilesToPatterns.get(id);
       combinedTilePatternsBitmask.mergeWith(tilePatternsBitmask);
     }

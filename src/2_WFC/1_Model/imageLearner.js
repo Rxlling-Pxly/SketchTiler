@@ -125,10 +125,10 @@ export default class ImageLearner {
   /** Populates this.adjacencies. */
   getAdjacencies() {
     /*
-      Check each pattern against every other pattern in every direction
+      Check each pattern against every other pattern, including itself, in every direction
       Because pattern adjacency is commutative (A is adjacent to B means B is adjacent to A)
       We don't need to check combos that we've already done
-      Hence why j starts at i+1
+      Hence why j starts at i
     */
 
     for (let i = 0; i < this.patterns.length; i++) {
@@ -143,7 +143,7 @@ export default class ImageLearner {
     const oppositeDirIndex = new Map([[0, 1], [1, 0], [2, 3], [3, 2]]);	// input direction index k to get opposite direction index o
 
     for (let i = 0; i < this.patterns.length; i++) {
-      for (let j = i+1; j < this.patterns.length; j++) {
+      for (let j = i; j < this.patterns.length; j++) {
         for (let k = 0; k < DIRECTIONS.length; k++) {
           if (this.isAdjacent(this.patterns[i], this.patterns[j], DIRECTIONS[k])) {
             const o = oppositeDirIndex.get(k);

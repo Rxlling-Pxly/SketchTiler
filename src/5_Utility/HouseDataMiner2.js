@@ -7,7 +7,7 @@ import Phaser from "../../lib/PhaserModule.js";
 //====================================================================================================
 //  ENTER DATA HERE:
 const firstHouse = 1; // inclusive
-const lastHouse = 23; // inclusive
+const lastHouse = 42; // inclusive
 //====================================================================================================
 
 

@@ -54,6 +54,18 @@ function isRect(pts){
 function isCircle(pts, threshold = 500) {
 	if (!isClosed(pts)) return false;
 
+    // reject strokes with too few points
+    if (pts.length < 10) return false;
+
+    // reject strokes with too small perimeter
+    const totalDist = pts.reduce((sum, p, i) => {
+        if (i === 0) return 0;
+        const prev = pts[i - 1];
+        return sum + Math.hypot(p.x - prev.x, p.y - prev.y);
+    }, 0);
+
+    if (totalDist < 100) return false;  
+
 	const center = getCentroid(pts);
 
 	// for each point, compute euclidean distance to the center 

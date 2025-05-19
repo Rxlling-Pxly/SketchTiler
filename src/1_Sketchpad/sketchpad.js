@@ -1,5 +1,5 @@
 import { chaikinSmooth, ramerDouglasPeucker } from "./lineCleanup.js";
-import { LineDisplayble, MouseDisplayable } from "./Displayables.js";
+import { LineDisplayble, MouseDisplayable } from "./displayables.js";
 import { getShape } from "./shapeDetection.js";
 
 const sketchCanvas = document.getElementById("sketch-canvas");
@@ -37,7 +37,7 @@ structures.forEach((s) => {
 		strokes: []
 	}
 });
-console.log(structureSketches); // DEBUG
+//console.log(structureSketches); // DEBUG
 
 //* EVENTS *//
 // sends sketch data to Phaser scene
@@ -191,6 +191,7 @@ exportButton.onclick = () => {
 // assign structure buttons
 for (const structure of structures) {
 	const button = document.getElementById(`${structure.type.toLowerCase()}-button`);
+	if(!button) continue;
 	button.onclick = () => {
 		mouseObject.mouse.hue = structure.color;
 		button.style.borderColor = structure.color;  // TODO: only highlight active button
@@ -235,7 +236,7 @@ function normalizeStrokes(){
 			if(!displayable.normalized){	// don't re-normalize a stroke that has already been normalized
 				displayable.normalized = true;
 				const shape = getShape(displayable.line.points);
-				console.log(displayable, shape)
+				//console.log(displayable, shape)
 				if(shape){
 					displayable.line.points = shape.points;
 				} else {

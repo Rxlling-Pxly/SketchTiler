@@ -10,16 +10,16 @@ export default class Demo_WFC extends Phaser.Scene {
   profileLearning = false;
 
   // width & height for entire maps should have an 8:5 ratio (e.g. 24x15, 40x25)
-  width = 3;
-  height = 3;
+  width = 4;
+  height = 15;
   maxAttempts = 10;
-  logProgress = false;
-  profileSolving = false;
+  logProgress = true;
+  profileSolving = true;
 
-  numRuns = 10;	// for this.getAverageGenerationDuration()
+  numRuns = 100;	// for this.getAverageGenerationDuration()
 
   groundModel = new WFCModel().learn(IMAGES.GROUND, this.N, this.profileLearning);
-  //structuresModel = new WFCModel().learn(IMAGES.STRUCTURES, this.N, this.profileLearning);
+  structuresModel = new WFCModel().learn(IMAGES.STRUCTURES, this.N, this.profileLearning);
 
   constructor() {
     super("wfcTestingScene");
@@ -65,33 +65,41 @@ export default class Demo_WFC extends Phaser.Scene {
     });
     this.timedRuns_Key.on("down", () => this.getAverageGenerationDuration(this.numRuns));
 
-    document.getElementById("instructions").innerHTML = `
+    const phaser = document.getElementById("phaser");
+    const instructions = document.createElement("section");
+    instructions.innerHTML = `
       <h2>Controls</h2>
-      (Opening the console is recommended) <br><br>
-      Generate: G <br>
-      Clear generation: C <br>
-      Get average generation duration over ${this.numRuns} runs: A
+      <p>
+        (Opening the console is recommended) <br><br>
+        Generate: G <br>
+        Clear generation: C <br>
+        Get average generation duration over ${this.numRuns} runs: A
+      </p>
     `;
+    phaser.append(instructions);
   }
 
   generateMap(){
     console.log("Using model for ground");
     const groundImage = this.groundModel.generate(this.width, this.height, this.maxAttempts, this.logProgress, this.profileSolving);
     if (!groundImage) return;
-
+    /*
+    console.log("Using model for structures");
+    const structuresImage = this.structuresModel.generate(this.width, this.height, this.maxAttempts, this.logProgress, this.profileSolving);
+    if (!structuresImage) return;
+    */
+    
     console.log("Using house generator");
-    const houseImage = generateHouse({
+    const structuresImage = generateHouse({
       topLeft: { x: 0, y: 0 },
       bottomRight: { x: this.width-1, y: this.height-1 },
       width: this.width,
       height: this.height
     });
-    if (!houseImage) return;
+    if (!structuresImage) return;
+    
 
-    this.displayMap(groundImage, houseImage);
-
-    this.width++;
-    this.height++;
+    this.displayMap(groundImage, structuresImage);
   }
 
   displayMap(groundImage, structuresImage) {
