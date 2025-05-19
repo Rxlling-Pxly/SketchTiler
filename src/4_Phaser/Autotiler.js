@@ -7,25 +7,24 @@ import generateHouse from "../3_Generators/generateHouse.js";
 import generateForest from "../3_Generators/generateForest.js";
 import generatePath from "../3_Generators/generatePath.js";
 
-const SUGGESTED_TILE_ALPHA = 0.5;  // must be between 0 and 1
-
 export default class Autotiler extends Phaser.Scene {
+  SUGGESTED_TILE_ALPHA = 0.5;  // must be between 0 and 1
+
   constructor() {
     super("autotilerScene");
   }
 
   preload() {
     this.load.setPath("./assets/");
-    this.load.image("tilemap", "tinyTown_Tilemap_Packed.png");
-    this.load.tilemapTiledJSON("tinyTownMap", `maps/map1.tmj`);
+    this.load.image("tileset", "tinyTown_Tilemap_Packed.png");
+    this.load.tilemapTiledJSON("tinyTownMap", "maps/map1.tmj");
   }
 
   create() {
-    this.multiLayerMap = this.add.tilemap("tinyTownMap", 16, 16, 40, 25);
-    this.tileset = this.multiLayerMap.addTilesetImage("kenney-tiny-town", "tilemap");
+    this.createTileset();
 
     this.groundModel = new WFCModel().learn(IMAGES.GROUND, 2);
-    this.structsModel = new WFCModel().learn([...IMAGES.STRUCTURES, ...IMAGES.HOUSES], 2);
+    this.structsModel = new WFCModel().learn([...IMAGES.STRUCTURES, ...IMAGES.HOUSES], 2);  // TODO: figure out why we need to include houses to avoid contradiction
 
     this.generator = {
       House: (region) => generateHouse({width: region.width, height: region.height}),
@@ -51,7 +50,20 @@ export default class Autotiler extends Phaser.Scene {
     });
   }
 
-  // calls generators
+  createTileset() {
+    /*
+      We need to create this.tileset from this.add.tilemap
+      as opposed to any of the this.make.tilemap calls that will occur later
+      because we need to utilize the embedded tileset in the tmj file (kenney-tiny-town).
+
+      The embedded tileset says that the firstgid is 1.
+      Using this.make.tilemap.addTilesetImage("tileset") will make the first tile have an id of 0
+      so each tile will appear as the previous tile in the tileset, making every tile appear wrong.
+    */
+    const map = this.add.tilemap("tinyTownMap", 16, 16, 40, 25);
+    this.tileset = map.addTilesetImage("kenney-tiny-town", "tileset");
+  }
+
   generate(regions, sketchImage) {
     for (let structType in regions) {
       for (let region of regions[structType]) {
@@ -79,16 +91,16 @@ export default class Autotiler extends Phaser.Scene {
   }
 
   createGroundMap() {
-      const image = this.groundModel.generate(TILEMAP.WIDTH, TILEMAP.HEIGHT, 10, false, false);
-      if (!image) throw new Error("Contradiction created");
-      
-      if (this.groundMap) this.groundMap.destroy();
-      this.groundMap = this.make.tilemap({
-        data: image,
-        tileWidth: TILEMAP.TILE_WIDTH,
-        tileHeight: TILEMAP.TILE_WIDTH
-      });
-      this.groundMap.createLayer(0, this.tileset, 0, 0);
+    const image = this.groundModel.generate(TILEMAP.WIDTH, TILEMAP.HEIGHT, 10, false, false);
+    if (!image) throw new Error("Contradiction created");
+
+    if (this.groundMap) this.groundMap.destroy();
+    this.groundMap = this.make.tilemap({
+      data: image,
+      tileWidth: TILEMAP.TILE_WIDTH,
+      tileHeight: TILEMAP.TILE_WIDTH
+    });
+    this.groundMap.createLayer(0, this.tileset);
   }
 
   createStructsMap_WFC() {
@@ -101,7 +113,7 @@ export default class Autotiler extends Phaser.Scene {
       tileWidth: TILEMAP.TILE_WIDTH,
       tileHeight: TILEMAP.TILE_WIDTH
     });
-    this.structsMap_WFC.createLayer(0, this.tileset, 0, 0).setAlpha(SUGGESTED_TILE_ALPHA);
+    this.structsMap_WFC.createLayer(0, this.tileset).setAlpha(this.SUGGESTED_TILE_ALPHA);
   }
 
   createStructsMap_Sketch(data) {
@@ -111,6 +123,6 @@ export default class Autotiler extends Phaser.Scene {
       tileWidth: TILEMAP.TILE_WIDTH,
       tileHeight: TILEMAP.TILE_WIDTH
     });
-    this.structsMap_Sketch.createLayer(0, this.tileset, 0, 0);
+    this.structsMap_Sketch.createLayer(0, this.tileset);
   }
 }
