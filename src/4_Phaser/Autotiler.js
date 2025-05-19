@@ -2,10 +2,10 @@ import Phaser from "../../lib/PhaserModule.js";
 import WFCModel from "../2_WFC/1_Model/WFCModel.js";
 import IMAGES from "../2_WFC/2_Input/IMAGES.js";
 import TILEMAP from "./TILEMAP.js";
-import getBoundingBox from "../3_Generators/getBoundingBox.js";
+import Regions from "../1_Sketchpad/strokeToTiles.js";
 import generateHouse from "../3_Generators/generateHouse.js";
 import generateForest from "../3_Generators/generateForest.js";
-import { Regions } from "../1_Sketchpad/strokeToTiles.js";
+import generatePath from "../3_Generators/generatePath.js";
 
 const SUGGESTED_TILE_ALPHA = 0.5;  // must be between 0 and 1
 
@@ -29,8 +29,8 @@ export default class Autotiler extends Phaser.Scene {
 
     this.generator = {
       House: (region) => generateHouse({width: region.width, height: region.height}),
-      Path: (region) => console.log("TODO: link path generator", region),
-      Fence: (region) => console.log("TODO: link fence generator", region),
+      Path: (region) => generatePath(region),
+      Fence: (region) => generatePath(region),
       Forest: (region) => generateForest({width: region.width, height: region.height})
     };
 
@@ -44,7 +44,7 @@ export default class Autotiler extends Phaser.Scene {
       
       console.log("Structures generated, attempting to generate map suggestions.");
       this.createGroundMap()
-      //this.createStructsMap_WFC();
+      this.createStructsMap_WFC();
       this.createStructsMap_Sketch(sketchImage);
 
       console.log("Generation Complete");
@@ -53,7 +53,6 @@ export default class Autotiler extends Phaser.Scene {
 
   // calls generators
   generate(regions, sketchImage) {
-    const result = [];
     for (let structType in regions) {
       for (let region of regions[structType]) {
         const gen = this.generator[structType](region);
@@ -70,12 +69,13 @@ export default class Autotiler extends Phaser.Scene {
         }
 
         if(this.structures[structType].info.region === "trace"){
-          // TODO: implement trace region placements
+          const tiles = structType === "Path" ? TILEMAP.PATH_TILES : TILEMAP.FENCE_TILES;
+          for (const { x, y } of gen) {
+            this.structsModel.setTile(x, y, tiles);
+          }
         }
-
       }
     }
-    return result;
   }
 
   createGroundMap() {

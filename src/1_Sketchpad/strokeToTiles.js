@@ -1,4 +1,4 @@
-export class Regions {
+export default class Regions {
   regionBlock = {
     box: (strokes) => this.getBoundingBox(strokes),
     trace: (strokes) => this.getTrace(strokes),

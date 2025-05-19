@@ -12,7 +12,9 @@
 
 // Sketchpad
 /**
- * @typedef {{ x: number, y: number }} Point Note that these are canvas coordinates.
+ * @typedef {{ x: number, y: number }} Point
+ * @typedef {{ x: number, y: number }} CanvasPoint A point with canvas coordinates. That means x and y represent a pixel's location.
+ * @typedef {{ x: number, y: number }} TilemapPoint A point with tilemap coordinates. That means x and y represent a tile's location.
  * @typedef {{ topLeft: Point, bottomRight: Point, width: number, height: number }} BoundingBox Note that the two points are in tilemap coordinates.
  */
 

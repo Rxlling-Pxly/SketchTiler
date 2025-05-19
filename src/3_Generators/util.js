@@ -4,7 +4,7 @@ import TILEMAP from "../4_Phaser/TILEMAP.js";
  * @param {Point[]} stroke
  * @returns {BoundingBox}
  */
-export default function getBoundingBox(stroke) {
+export function getBoundingBox(stroke) {
   let [minX, maxX, minY, maxY] = [Infinity, 0, Infinity, 0];
 
   for (const {x, y} of stroke) {
@@ -28,6 +28,6 @@ export default function getBoundingBox(stroke) {
  * @param {number} coord 
  * @returns {number}
  */
-function canvasToTilemapCoords(coord) {
+export function canvasToTilemapCoords(coord) {
   return Math.floor(coord / TILEMAP.TILE_WIDTH);
 }
