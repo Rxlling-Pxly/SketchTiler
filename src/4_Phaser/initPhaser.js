@@ -17,6 +17,6 @@ export default function initPhaser() {
     //autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,	// comment out this line to not center
     //backgroundColor: "#ebebeb",
     render: { pixelArt: true },	// scale pixel art without blurring
-    scene: [Autotiler]
+    scene: [Demo_Sketch]
   });
 }

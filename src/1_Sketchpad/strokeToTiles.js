@@ -1,3 +1,5 @@
+import { isClosed, isOverlapped } from "./tileUtils.js";
+
 export class Regions {
   regionBlock = {
     box: (strokes) => this.getBoundingBox(strokes),
@@ -79,6 +81,7 @@ export class Regions {
   // takes an array of strokes and combines strokes within a threshold 
   //    from each other into a single stroke. Returns a new array with
   //    grouped strokes.
+  // *** TODO: two neighboring houses should not condense into a single mansion ***
   groupNearby(strokes, threshold = 2) {
     const visited = new Array(strokes.length).fill(false);  // visit flags
     const result = [];
@@ -112,10 +115,22 @@ export class Regions {
     return result;
   }
 
-  // checkes is strokeA and strokeB are within threshold of one another
+  // checks if strokeA and strokeB are within threshold of one another
   strokesNearby(strokeA, strokeB, threshold) {
     const boxA = this.getBoundingBox(strokeA);
     const boxB = this.getBoundingBox(strokeB);
+
+    if(!isOverlapped(boxA, boxB, threshold)){ // TEMP ??????????
+      // if the strokes arent overlapping, check whether both are closed
+      if(isClosed(strokeA) && isClosed(strokeB)) return false;    // TEMP
+    } else {
+      // if the strokes are overlapping, then they are considered nearby
+      // TODO:
+      //  might need to do additional checks here. 
+      //    > are the regions overlapping on purpose?
+      //    > how to determine, if both strokes are closed, user intent????  
+      return true;
+    }
 
     return (
       boxA.topLeft.x - threshold < boxB.bottomRight.x &&

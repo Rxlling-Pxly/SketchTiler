@@ -24,6 +24,7 @@ export default class Demo_Sketch extends Phaser.Scene {
     this.sketch;
     this.structures;
     this.regions;
+    this.rects = [];
 
     // receives sketches from sketch tool
     window.addEventListener("generate", (e) => {
@@ -36,7 +37,8 @@ export default class Demo_Sketch extends Phaser.Scene {
     window.addEventListener("clearSketch", (e) => {
       this.sketch = [];
       this.structures = {};
-      this.fillTiles_gfx.clear();
+
+      this.rects.forEach((r) => r.destroy());
     });
 
     window.addEventListener("undoSketch", (e) => {
@@ -44,7 +46,8 @@ export default class Demo_Sketch extends Phaser.Scene {
       //    but will need to find a better way in Autotiler scene
       this.sketch = [];
       this.structures = {};
-      this.fillTiles_gfx.clear();
+
+      this.rects.forEach((r) => r.destroy());
     });
 
     window.addEventListener("redoSketch", (e) => {
@@ -52,7 +55,8 @@ export default class Demo_Sketch extends Phaser.Scene {
       //    but will need to find a better way in Autotiler scene
       this.sketch = [];
       this.structures = {};
-      this.fillTiles_gfx.clear();
+
+      this.rects.forEach((r) => r.destroy());
     });
   }
 
@@ -99,23 +103,27 @@ export default class Demo_Sketch extends Phaser.Scene {
   fillTiles(data, config) {
     const color = config.color.replace(/\#/g, "0x"); // make hex-formatted color readable for phaser
     this.fillTiles_gfx.fillStyle(color);
+    
     const sz = this.cellSize;
+
 
     // data should have all coords to be filled
     if (config.regionType === "trace") {
       for (let i = 0; i < data.length; i++) {
         let { x, y } = data[i];
-        this.fillTiles_gfx.fillRect(sz * x, sz * y, sz, sz);
+        this.rects.push(this.add.rectangle(sz * x, sz * y, sz, sz, color).setOrigin(0));
       }
     }
     // data should have {min: {x, y}, max: {x, y}}
     if (config.regionType === "box") {
-      this.fillTiles_gfx.fillRect(
+      const rect = this.add.rectangle(
         data.topLeft.x * sz, 
         data.topLeft.y * sz, 
         data.width  * sz, 
-        data.height * sz
-      );
+        data.height * sz,
+        color
+      ).setStrokeStyle(1, "0xffffff").setOrigin(0);
+      this.rects.push(rect)
     }
   }
 
