@@ -57,6 +57,8 @@ document.getElementById("house-button").click();
 
 //* SKETCH EVENTS *//
 const clearPhaser = new CustomEvent("clearSketch");		// phaser event
+const undoPhaser = new CustomEvent("undoSketch");		// phaser event
+const redoPhaser = new CustomEvent("redoSketch");		// phaser event
 
 // When changeDraw is dispatched, the drawing area will be repainted.
 const changeDraw = new Event("drawing-changed"); 
@@ -238,6 +240,7 @@ function undo(){
 	displayList = [...lastAction.display];
 	redoDisplayList = [...lastAction.redo];
 	sketchCanvas.dispatchEvent(changeDraw);
+	window.dispatchEvent(undoPhaser);	// notify phaser
 	return;
 }
 
@@ -257,6 +260,7 @@ function redo() {
 	displayList = [...action.display];
 	redoDisplayList = [...action.redo];
 	sketchCanvas.dispatchEvent(changeDraw);
+	window.dispatchEvent(redoPhaser);	// notify phaser
 	return;
 }
 

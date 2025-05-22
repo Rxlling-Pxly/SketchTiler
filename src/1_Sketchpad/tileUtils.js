@@ -42,24 +42,10 @@ export function countSharpAngles(points, angleThreshold = 110) {
 }
 
 // determine whether two regions are overlapped (more than threshold, t)
-export function isOverlapped(r1, r2, t){
-    // check if any of r1's extremeties are inside of r2
-    const topRight = {
-        x: r1.bottomRight.x,
-        y: r1.topLeft.y 
-    }
-    const bottomLeft = {
-        x: r1.topLeft.x,
-        y: r1.bottomRight.y
-    }
+export function isOverlapped(r1, r2, t) {
+    const overlapX = Math.min(r1.bottomRight.x, r2.bottomRight.x) - Math.max(r1.topLeft.x, r2.topLeft.x);
+    const overlapY = Math.min(r1.bottomRight.y, r2.bottomRight.y) - Math.max(r1.topLeft.y, r2.topLeft.y);
 
-    let extrems = [r1.topLeft, topRight, r1.bottomRight, bottomLeft];
-
-    for(let e of extrems){
-        if( e.x > r2.topLeft.x + t && e.x < r2.bottomRight.x - t &&
-            e.y > r2.topLeft.y + t && e.y < r2.bottomRight.y - t 
-        ){ return true; }
-    }
-
-    return false;
+    // If both width and height of the overlapping region exceed the threshold
+    return overlapX > t && overlapY > t;
 }

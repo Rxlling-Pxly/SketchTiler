@@ -38,7 +38,11 @@ export class Regions {
         let regionType = struct.info.regionType;
 
         // group nearby strokes into a single stroke before defining region
-        struct.strokes = this.groupNearby(struct.strokes);
+        struct.strokes = this.groupNearbyStrokes(struct.strokes);
+
+        // TODO: LEFT OFF HERE!!!
+        // once strokes have been grouped, see if any shapes need to be grouped
+        // *** two neighboring houses should not condense into a single mansion ***
 
         // define regions (box or trace) for every stroke of this structure
         for (let stroke of struct.strokes) {
@@ -81,8 +85,7 @@ export class Regions {
   // takes an array of strokes and combines strokes within a threshold 
   //    from each other into a single stroke. Returns a new array with
   //    grouped strokes.
-  // *** TODO: two neighboring houses should not condense into a single mansion ***
-  groupNearby(strokes, threshold = 2) {
+  groupNearbyStrokes(strokes, threshold = 2) {
     const visited = new Array(strokes.length).fill(false);  // visit flags
     const result = [];
 
@@ -117,9 +120,11 @@ export class Regions {
 
   // checks if strokeA and strokeB are within threshold of one another
   strokesNearby(strokeA, strokeB, threshold) {
+    if(isClosed(strokeA) || isClosed(strokeB)) return false;  // ignore closed shapes
     const boxA = this.getBoundingBox(strokeA);
     const boxB = this.getBoundingBox(strokeB);
 
+    /*
     if(!isOverlapped(boxA, boxB, threshold)){ // TEMP ??????????
       // if the strokes arent overlapping, check whether both are closed
       if(isClosed(strokeA) && isClosed(strokeB)) return false;    // TEMP
@@ -131,6 +136,7 @@ export class Regions {
       //    > how to determine, if both strokes are closed, user intent????  
       return true;
     }
+    */
 
     return (
       boxA.topLeft.x - threshold < boxB.bottomRight.x &&

@@ -47,6 +47,7 @@ export default class Demo_Sketch extends Phaser.Scene {
       this.sketch = [];
       this.structures = {};
 
+      console.log(this.rects)
       this.rects.forEach((r) => r.destroy());
     });
 
@@ -56,6 +57,7 @@ export default class Demo_Sketch extends Phaser.Scene {
       this.sketch = [];
       this.structures = {};
 
+      console.log(this.rects)
       this.rects.forEach((r) => r.destroy());
     });
   }
