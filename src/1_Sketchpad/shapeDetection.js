@@ -1,5 +1,5 @@
 import { ramerDouglasPeucker } from "./lineCleanup.js";
-import { countSharpAngles, isClosed, getCentroid } from "./tileUtils.js";
+import { countSharpAngles, isClosed, getCentroid } from "./strokeUtils.js";
 
 const sketchCanvas = document.getElementById("sketch-canvas");
 
