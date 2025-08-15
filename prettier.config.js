@@ -26,7 +26,15 @@ const config = {
   singleQuote: false,
   tabWidth: 2,
   trailingComma: "all",
-  useTabs: false
+  useTabs: false,
 };
 
+
+// Though ESLint requires Node, we want to be able to use Prettier without needing Node
+// in case someone ever wanted to use Prettier but not ESLint
+
+// And to do that, we must write this config file in CommonJS,
+// which ESLint was not configured to understand for this project
+
+// eslint-disable-next-line no-undef
 module.exports = config;
