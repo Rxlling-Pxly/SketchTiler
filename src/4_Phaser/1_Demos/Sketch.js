@@ -1,7 +1,7 @@
 import Phaser from "../../lib/phaserModule.js";
 import { Regions } from "../1_Sketchpad/1_Classes/regions.js";
 
-export default class Demo_Sketch extends Phaser.Scene {
+export default class Sketch extends Phaser.Scene {
   constructor() {
     super("SketchDemo");
   }

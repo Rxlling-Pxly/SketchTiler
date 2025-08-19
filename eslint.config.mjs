@@ -14,6 +14,6 @@ export default defineConfig([
   { files: ["**/*.md"], plugins: { markdown }, language: "markdown/gfm", extends: ["markdown/recommended"] },
   { files: ["**/*.css"], plugins: { css }, language: "css/css", extends: ["css/recommended"] },
   
-  // This one was added by me since we don't want ESLint to unecessarily scanning this huge folder
+  // This one was added by me since we don't want ESLint to unecessarily scanning that huge folder
   { ignores: ["node_modules/"] },
 ]);

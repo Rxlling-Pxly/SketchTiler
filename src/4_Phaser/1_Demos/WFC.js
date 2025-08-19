@@ -3,7 +3,7 @@ import WFCModel from "../2_WFC/1_Model/WFCModel.js";
 import IMAGES from "../2_WFC/2_Input/IMAGES.js";
 import generateHouse from "../3_Generators/generateHouse.js";
 
-export default class Demo_WFC extends Phaser.Scene {
+export default class WFC extends Phaser.Scene {
   displayedMapID = 3;	// check assets folder to see all maps  
 
   N = 2;

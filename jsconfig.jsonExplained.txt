@@ -8,6 +8,6 @@ I couldn't figure out how to make it only do the ones in the Types folder
 
 Creating jsconfig.json broke multiple things around the project however
 This is because its existence meant that we no longer wanted things to be handled automatically for us
-"ESNext" and "DOM" fix what was broken
+The rest of the file exists to fix what was broken
  - "ESNext" allows us to use Maps
  - "DOM" allows us to use performance.now()

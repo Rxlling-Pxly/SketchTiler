@@ -3,7 +3,7 @@
 }
 
 #sketchpad {
-  position: relative;	/* so child canvases are positioned relative to this element */
+  position: relative;
 }
 
 #sketchpad > canvas {

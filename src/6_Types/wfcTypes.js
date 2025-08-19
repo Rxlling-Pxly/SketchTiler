@@ -1,23 +1,6 @@
-/*
-	Create global type definitions to be used by other project files here
-	These typedefs simply exist to improve code readability and editor support, especially for JSDoc comments
-	
-	See jsconfigExplained.txt for more information about this file
-*/
-
-// Imports (for the following typedefs to use)
 /**
  * @typedef {import("../2_WFC/1_Model/Bitmask.js").default} Bitmask
- */
-
-// Sketchpad
-/**
- * @typedef {{ x: number, y: number }} Point Note that these are canvas coordinates.
- * @typedef {{ topLeft: Point, bottomRight: Point, width: number, height: number }} BoundingBox Note that the two points are in tilemap coordinates.
- */
-
-// WFC
-/**
+ * 
  * @typedef {number[]} Direction An array of two numbers. The first stores y and the second stores x. Positive y points down while positive x points right.
  * 
  * @typedef {number[][]} TilemapImage A 2D matrix of tile IDs that represents a layer of a tilemap.
