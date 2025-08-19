@@ -1,6 +1,6 @@
 import ImageLearner from "./ImageLearner.js";
 import ConstraintSolver from "./ConstraintSolver.js";
-import Bitmask from "./Bitmask.js";
+import BigBitmask from "./BigBitmask.js";
 
 export default class WFCModel {
   imageLearner = new ImageLearner();
@@ -33,7 +33,7 @@ export default class WFCModel {
    * @param {number[]} ids
    */
   setTile(x, y, ids) {
-    const combinedTilePatternsBitmask = new Bitmask(this.imageLearner.patterns.length);
+    const combinedTilePatternsBitmask = new BigBitmask(this.imageLearner.patterns.length);
     for (const id of ids) {
       if (!this.imageLearner.tilesToPatterns.has(id)) throw new Error(`ID ${id} not found in patterns.`);
       const tilePatternsBitmask = this.imageLearner.tilesToPatterns.get(id);

@@ -5,7 +5,7 @@
  */
 
 import TILEMAP from "../4_Phaser/TILEMAP.js";
-import "./sketchpad.js";  // this line executes the file
+import "./sketchpad.js"; // so the file is executed
 
 /**
  * Initializes the sketchpad dimensions and rendering settings.

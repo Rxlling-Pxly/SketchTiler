@@ -1,5 +1,5 @@
 import DIRECTIONS from "./DIRECTIONS.js";
-import Bitmask from "./Bitmask.js";
+import BigBitmask from "./BigBitmask.js";
 import Queue from "./Queue.js";
 import PerformanceProfiler from "../../5_Utility/PerformanceProfiler.js";
 
@@ -88,12 +88,12 @@ export default class ConstraintSolver {
     this.waveMatrix = [];
     for (let y = 0; y < height; y++) this.waveMatrix[y] = [];
 
-    const allPatternsPossible = new Bitmask(numPatterns);
+    const allPatternsPossible = new BigBitmask(numPatterns);
     for (let i = 0; i < numPatterns; i++) allPatternsPossible.setBit(i);
 
     for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      this.waveMatrix[y][x] = Bitmask.createCopy(allPatternsPossible);
+      this.waveMatrix[y][x] = BigBitmask.createDeepCopy(allPatternsPossible);
     }}
   }
 
@@ -242,18 +242,18 @@ export default class ConstraintSolver {
 
         const cell2_PossiblePatterns_Bitmask = this.waveMatrix[y2][x2];
 
-        const cell1_PossibleAdjacentPatterns_Bitmask = new Bitmask(adjacencies.length);
+        const cell1_PossibleAdjacentPatterns_Bitmask = new BigBitmask(adjacencies.length);
         for (const i of cell1_PossiblePatterns_Array) {
           const i_AdjacentPatterns_Bitmask = adjacencies[i][k];
           cell1_PossibleAdjacentPatterns_Bitmask.mergeWith(i_AdjacentPatterns_Bitmask);
         }
 
-        const cell2_NewPossiblePatterns_Bitmask = Bitmask.AND(cell2_PossiblePatterns_Bitmask, cell1_PossibleAdjacentPatterns_Bitmask);
+        const cell2_NewPossiblePatterns_Bitmask = BigBitmask.AND(cell2_PossiblePatterns_Bitmask, cell1_PossibleAdjacentPatterns_Bitmask);
 
         const contradictionCreated = cell2_NewPossiblePatterns_Bitmask.isEmpty();
         if (contradictionCreated) return true;
         
-        const cell2Changed = !Bitmask.EQUALS(cell2_PossiblePatterns_Bitmask, cell2_NewPossiblePatterns_Bitmask);
+        const cell2Changed = !BigBitmask.EQUALS(cell2_PossiblePatterns_Bitmask, cell2_NewPossiblePatterns_Bitmask);
         if (cell2Changed) {
           this.waveMatrix[y2][x2] = cell2_NewPossiblePatterns_Bitmask;
           queue.enqueue([y2, x2]);

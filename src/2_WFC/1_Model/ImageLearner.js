@@ -1,5 +1,5 @@
 import DIRECTIONS from "./DIRECTIONS.js";
-import Bitmask from "./Bitmask.js";
+import BigBitmask from "./BigBitmask.js";
 import PerformanceProfiler from "../../5_Utility/PerformanceProfiler.js";
 
 export default class ImageLearner {
@@ -133,10 +133,10 @@ export default class ImageLearner {
 
     for (let i = 0; i < this.patterns.length; i++) {
       this.adjacencies.push([
-        new Bitmask(this.patterns.length),	// up
-        new Bitmask(this.patterns.length),	// down
-        new Bitmask(this.patterns.length),	// left
-        new Bitmask(this.patterns.length)	// right
+        new BigBitmask(this.patterns.length),	// up
+        new BigBitmask(this.patterns.length),	// down
+        new BigBitmask(this.patterns.length),	// left
+        new BigBitmask(this.patterns.length)	// right
       ]);
     }		
 
@@ -199,7 +199,7 @@ export default class ImageLearner {
     for (let i = 0; i < this.patterns.length; i++) {
       const tileID = this.patterns[i][0][0];
       if (this.tilesToPatterns.has(tileID)) this.tilesToPatterns.get(tileID).setBit(i);
-      else this.tilesToPatterns.set(tileID, new Bitmask(this.patterns.length).setBit(i));
+      else this.tilesToPatterns.set(tileID, new BigBitmask(this.patterns.length).setBit(i));
     }
   }
 }
