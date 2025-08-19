@@ -1,5 +1,6 @@
 /**
- * @fileoverview Sketch canvas input handler for a shape-drawing system.
+ * @fileoverview
+ * Sketch canvas input handler for a shape-drawing system.
  * Supports drawing, undo/redo history, stroke normalization, and communication with a Phaser scene.
  * 
  * Dependencies:
@@ -8,6 +9,7 @@
  * - normalizeStrokes, inCanvasBounds, showDebugText (canvasUtils.js)
  * - undo, redo, getSnapshot (canvasHistory.js)
  */
+
 import { LineDisplayble, MouseDisplayable } from "./1_Classes/displayables.js";
 import { WorkingLine } from "./1_Classes/line.js";
 import { conf } from "./2_Utils/canvasConfig.js";
@@ -18,9 +20,7 @@ import { undo, redo, getSnapshot } from "./2_Utils/canvasHistory.js"
 const sketchCanvas = document.getElementById("sketch-canvas");
 const ctx = sketchCanvas.getContext("2d");
 
-/**
- * Current in-progress line.
- */
+/** Current in-progress line. */
 let workingLine = new WorkingLine({ 
 	points: [], 
 	thickness: conf.lineThickness, 

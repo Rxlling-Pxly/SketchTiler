@@ -1,8 +1,7 @@
 import Phaser from "../../lib/phaserModule.js";
+import TILEMAP from "./TILEMAP.js";
 import WFCModel from "../2_WFC/1_Model/WFCModel.js";
 import IMAGES from "../2_WFC/2_Input/IMAGES.js";
-import TILEMAP from "./TILEMAP.js";
-import getBoundingBox from "../3_Generators/getBoundingBox.js";
 import generateHouse from "../3_Generators/generateHouse.js";
 import generateForest from "../3_Generators/generateForest.js";
 import { Regions } from "../1_Sketchpad/1_Classes/regions.js";
@@ -21,8 +20,7 @@ export default class Autotiler extends Phaser.Scene {
   }
 
   create() {
-    const cellSize = 16;
-    this.multiLayerMap = this.add.tilemap("tinyTownMap", cellSize, cellSize, 40, 25);
+    this.multiLayerMap = this.add.tilemap("tinyTownMap", TILEMAP.TILE_WIDTH, TILEMAP.TILE_WIDTH, 40, 25);
     this.tileset = this.multiLayerMap.addTilesetImage("kenney-tiny-town", "tilemap");
 
     this.groundModel = new WFCModel().learn(IMAGES.GROUND, 2);
@@ -38,7 +36,7 @@ export default class Autotiler extends Phaser.Scene {
     window.addEventListener("generate", (e) => {
       this.sketch = e.detail.sketch;
       this.structures = e.detail.structures;
-      this.regions = new Regions(this.sketch, this.structures, cellSize).get();
+      this.regions = new Regions(this.sketch, this.structures, TILEMAP.TILE_WIDTH).get();
 
       const sketchImage = Array.from({ length: TILEMAP.HEIGHT }, () => Array(TILEMAP.WIDTH).fill(0));  // 2D array of all 0s
       
@@ -54,8 +52,7 @@ export default class Autotiler extends Phaser.Scene {
     });
 
     window.addEventListener("clearSketch", (e) => {
-      const sketchImage = Array.from({ length: TILEMAP.HEIGHT }, () => Array(TILEMAP.WIDTH).fill(0));  // 2D array of all 0s
-      
+      //const sketchImage = Array.from({ length: TILEMAP.HEIGHT }, () => Array(TILEMAP.WIDTH).fill(0));  // 2D array of all 0s
       console.log("Clearing sketch data");
       this.structsModel.clearSetTiles();
     });
