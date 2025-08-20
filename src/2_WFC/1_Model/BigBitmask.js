@@ -62,7 +62,7 @@ export default class BigBitmask {
   }
 
   /**
-   * Returns a new `BigBitmask` with identical bit values to the `source`'s.
+   * Returns a new `BigBitmask` with identical bit values to `source`.
    * @param {BigBitmask} source
    */
   static createDeepCopy(source) {
@@ -99,7 +99,7 @@ export default class BigBitmask {
   }
 
   /**
-   * Unsets any set bits in this `BigBitmask` that are unset in the `other`.
+   * Unsets any set bits in this `BigBitmask` that are unset in `other`.
    * This method is analogous to a bitwise AND assignment (&=) operation.
    * @param {BigBitmask} other
    */
@@ -109,7 +109,7 @@ export default class BigBitmask {
   }
 
   /**
-   * Sets any unset bits in this `BigBitmask` that are set in the `other`.
+   * Sets any unset bits in this `BigBitmask` that are set in `other`.
    * This method is analogous to a bitwise OR assignment (|=) operation.
    * @param {BigBitmask} other
    */
