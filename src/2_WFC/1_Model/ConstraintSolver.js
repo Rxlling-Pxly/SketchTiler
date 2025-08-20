@@ -21,12 +21,12 @@ export default class ConstraintSolver {
    * @param {number} height The height to set this.waveMatrix to.
    * @param {number} maxAttempts
    * @param {bool} logProgress Whether to log the progress of this function or not.
-   * @param {bool} profile Whether to profile the performance of this function or not.
+   * @param {bool} profilePerformance Whether to profile the performance of this function or not.
    * @returns {bool} Whether the attempt was successful or not.
    */
-  solve(weights, adjacencies, setTileInstructions, width, height, maxAttempts, logProgress, profile) {
+  solve(weights, adjacencies, setTileInstructions, width, height, maxAttempts, logProgress, profilePerformance) {
     this.performanceProfiler.clearData();
-    this.profileFunctions(profile);
+    this.profileFunctions(profilePerformance);
 
     this.initializeWaveMatrix(weights.length, width, height);
     this.setTiles(setTileInstructions, adjacencies);
@@ -36,7 +36,7 @@ export default class ConstraintSolver {
       const [y, x] = this.getLeastEntropyUnsolvedCellPosition(weights);
       if (y === -1 && x === -1) {
         if (logProgress) console.log(`solved in ${numAttempts} attempt(s)`);
-        if (profile) this.performanceProfiler.logData();
+        if (profilePerformance) this.performanceProfiler.logData();
         return true;
       }
 
@@ -52,12 +52,12 @@ export default class ConstraintSolver {
     }
 
     if (logProgress) console.log("max attempts reached");
-    if (profile) this.performanceProfiler.logData();
+    if (profilePerformance) this.performanceProfiler.logData();
     return false;
   }
 
   /**
-   * Registers/unregisters important member functions to the performance profiler.
+   * Registers/unregisters important methods to the performance profiler.
    * @param {bool} value Whether to profile (register) or not (unregister).
    */
   profileFunctions(value) {
