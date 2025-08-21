@@ -6,6 +6,9 @@
     <title>SketchTiler</title>
     <link rel="stylesheet" href="/index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+    <!-- using JSZip for exports -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   </head>
   <body>
     <div id="page">
@@ -34,6 +37,10 @@
           <button id="clear-button" class="button is-light">Clear</button>
         </div>
         <div id="phaser"></div>
+        <div id="export-buttons">
+          <button id="export-map-button" class="button is-dark" disabled="true">Export map</button>
+          <button id="export-sketch-button" class="button is-dark" disabled="true">Export sketch</button>
+        </div>
       </div>
       <div id="instructions" class="content">
         <h2 class="title is-2">SketchTiler - the sketch to tilemap application</h2>

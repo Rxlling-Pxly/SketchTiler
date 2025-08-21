@@ -137,6 +137,9 @@ sketchCanvas.addEventListener("mousemove", (ev) => {
 
 			// add stroke to canvas
 			sketchCanvas.dispatchEvent(changeDraw);
+
+			// enable exports
+			exportButton.disabled = false;
 		}
 	}
 
@@ -172,6 +175,19 @@ sketchCanvas.addEventListener("mouseup", (ev) => {
 	}
 });
 
+// Hide cursor when it leaves canvas area
+sketchCanvas.addEventListener("mouseleave", (e) => {
+	mouseObject = new MouseDisplayable({
+		x: -1,
+		y: -1,
+		hue: mouseObject.mouse.hue,
+		active: false,
+	}, 0);
+
+	// redraw sketch canvas to capture new cursor position
+	sketchCanvas.dispatchEvent(movedTool);
+});
+
 // Clears canvas and structure display list.
 const clearButton = document.getElementById(`clear-button`);
 const clearPhaser = new CustomEvent("clearSketch");	// clears phaser canvas
@@ -187,6 +203,8 @@ clearButton.onclick = () => {
 	ctx.clearRect(0, 0, sketchCanvas.width, sketchCanvas.height);
 	window.dispatchEvent(clearPhaser);		// clear phaser canvas
 	sketchCanvas.dispatchEvent(changeDraw);	// redraw sketch canvas 
+
+	exportButton.disabled = true;	
 };
 
 // Sends sketch data to Phaser via custom event.
@@ -275,4 +293,34 @@ export function setDisplayList(data, key){
 	} else if(key.toLowerCase() === "redo"){
 		redoDisplayList = data;
 	}
+}
+
+// EXPORTS
+const exportButton = document.getElementById("export-sketch-button");
+exportButton.disabled = true;
+
+exportButton.addEventListener("click", async () => {
+    const zip = JSZip();
+	await exportSketch(zip)
+
+	// generate zip
+    const blob = await zip.generateAsync({ type: "blob" });
+    saveAs(blob, "sketchtiler_export_sketch.zip");
+});
+
+// loads JSZip zip file with sketch data and sketch canvas snapshot
+export async function exportSketch(zip){
+    // add sketch data to the zip
+    zip.file("sketchData.json", JSON.stringify({
+      sketch: displayList,
+    }));
+
+    // add sketch image to the zip
+    const canvas = document.getElementById("sketch-canvas");
+    const dataURL = canvas.toDataURL("image/PNG")
+    const base64Data = dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
+
+    zip.file("sketchImage.png", base64Data, { base64: true });
+	
+	exportButton.disabled = true;
 }

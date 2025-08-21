@@ -10,3 +10,8 @@
   position: absolute;
   cursor: none;
 }
+
+#export-buttons {
+  position: relative;
+  float: right;
+}
