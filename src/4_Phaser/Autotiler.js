@@ -107,7 +107,7 @@ export default class Autotiler extends Phaser.Scene {
   }
 
   createStructsMap_WFC() {
-    const image = this.structsModel.generate(TILEMAP.WIDTH, TILEMAP.HEIGHT, 10, true, false);
+    const image = this.structsModel.generate(TILEMAP.WIDTH, TILEMAP.HEIGHT, 10, true, true);
     if (!image) throw new Error ("Contradiction created");
 
     if (this.structsMap_WFC) this.structsMap_WFC.destroy();

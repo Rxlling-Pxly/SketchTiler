@@ -2,6 +2,9 @@ import ImageLearner from "./ImageLearner.js";
 import ConstraintSolver from "./ConstraintSolver.js";
 import BigBitmask from "./BigBitmask.js";
 
+/** A self-contained instance of the Wave Function Collapse algorithm
+ *  that's capable of learning the patterns of one or more images
+ *  and generating as many similar output images as you'd like. */
 export default class WFCModel {
   imageLearner = new ImageLearner();
   constraintSolver = new ConstraintSolver();

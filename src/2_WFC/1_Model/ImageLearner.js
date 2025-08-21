@@ -1,18 +1,20 @@
-import DIRECTIONS from "./DIRECTIONS.js";
-import BigBitmask from "./BigBitmask.js";
 import PerformanceProfiler from "../../5_Utility/PerformanceProfiler.js";
+import BigBitmask from "./BigBitmask.js";
+import DIRECTIONS from "./DIRECTIONS.js";
 
+/** A component of the WFCModel that's responsible for gathering all data
+ *  necessary for solving a wave matrix and generating an image from it. */
 export default class ImageLearner {
   /** Stores the tiles of every pattern.
    *  @example patterns[3] -> [ [1, 2], [3, 4] ]
    *  @type {Pattern[]} */
   patterns;
 
-  /** Stores the weight of every pattern.
+  /** Stores the number of occurrances of every pattern in the learned image(s).
    *  @type {number[]} */
   weights;
 
-  /** Stores the pattern adjacencies of every pattern.
+  /** Stores the adjacent patterns in each direction of every pattern.
    *  @type {AdjacentPatternsMap[]} */
   adjacencies;
 

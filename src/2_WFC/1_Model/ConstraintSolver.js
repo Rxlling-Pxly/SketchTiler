@@ -1,28 +1,43 @@
-import DIRECTIONS from "./DIRECTIONS.js";
-import BigBitmask from "./BigBitmask.js";
-import Queue from "./Queue.js";
 import PerformanceProfiler from "../../5_Utility/PerformanceProfiler.js";
 
+import BigBitmask from "./BigBitmask.js";
+
+import {
+  lexical,
+  leastShannonEntropy,
+} from "./cellSelectionHeuristics.js";
+
+import {
+  weightedRandom,
+} from "./patternSelectionHeuristics.js"
+
+import Queue from "./Queue_List.js";          // uncomment the one you wish to use
+//import Queue from "./Queue_LinkedList.js";  // uncomment the one you wish to use
+
+import DIRECTIONS from "./DIRECTIONS.js";
+
+
+/** A component of the WFCModel that's solely responsible for solving the wave matrix. */
 export default class ConstraintSolver {
-  /**
-   * Represents the possibility space of an image in the middle of generation.
-   * @type {Cell[][]}
-   */
+  /** A 2D grid of `Cell`s, where each `Cell` corresponds to a tile in the image being generated
+   *  and stores the possible patterns that tile can yield from.
+   *  In that sense, `waveMatrix` represents the entire possibility space of the image.
+   *  @type {Cell[][]} */
   waveMatrix;
 
   performanceProfiler = new PerformanceProfiler();
 
   /**
-   * Attempts to solve this.waveMatrix based on learned pattern data.
-   * @param {number[]} weights
-   * @param {AdjacentPatternsMap[]} adjacencies
-   * @param {SetTileInstruction[]} setTiles
-   * @param {number} width The width to set this.waveMatrix to.
-   * @param {number} height The height to set this.waveMatrix to.
-   * @param {number} maxAttempts
-   * @param {bool} logProgress Whether to log the progress of this function or not.
-   * @param {bool} profilePerformance Whether to profile the performance of this function or not.
-   * @returns {bool} Whether the attempt was successful or not.
+   * Attempts to solve `this.waveMatrix` based on learned pattern data.
+   * @param {number[]} weights The number of occurrances of every pattern.
+   * @param {AdjacentPatternsMap[]} adjacencies The adjacent patterns in each direction of every pattern.
+   * @param {SetTileInstruction[]} setTileInstructions Stores which `Cell`s have a limited choice in the possible patterns they can be and what those possible patterns are.
+   * @param {number} width The width to set `this.waveMatrix` to.
+   * @param {number} height The height to set `this.waveMatrix` to.
+   * @param {number} maxAttempts The max amount of tries to solve `this.waveMatrix`.
+   * @param {bool} logProgress Whether to log the progress of this function in the console.
+   * @param {bool} profilePerformance Whether to profile the performance of this function and display it in the console.
+   * @returns {bool} Whether the attempt was successful.
    */
   solve(weights, adjacencies, setTileInstructions, width, height, maxAttempts, logProgress, profilePerformance) {
     this.performanceProfiler.clearData();
@@ -31,9 +46,11 @@ export default class ConstraintSolver {
     this.initializeWaveMatrix(weights.length, width, height);
     this.setTiles(setTileInstructions, adjacencies);
 
+    let lastObservedCellPosition = [0, 0];
+
     let numAttempts = 1;
-    while (numAttempts <= maxAttempts) {	// use <= so maxAttempts can be 1
-      const [y, x] = this.getLeastEntropyUnsolvedCellPosition(weights);
+    while (numAttempts <= maxAttempts) { // use <= so `maxAttempts` is allowed to be set to 1
+      const [y, x] = this.getCellToObservePosition(lastObservedCellPosition, weights);
       if (y === -1 && x === -1) {
         if (logProgress) console.log(`solved in ${numAttempts} attempt(s)`);
         if (profilePerformance) this.performanceProfiler.logData();
@@ -41,6 +58,7 @@ export default class ConstraintSolver {
       }
 
       this.observe(y, x, weights);
+      lastObservedCellPosition = [y, x];
 
       if (logProgress) console.log("propagating...");
       const contradictionCreated = this.propagate(y, x, adjacencies);
@@ -48,6 +66,7 @@ export default class ConstraintSolver {
         this.initializeWaveMatrix(weights.length, width, height);
         this.setTiles(setTileInstructions, adjacencies);
         numAttempts++;
+        lastObservedCellPosition = [0, 0];
       }
     }
 
@@ -57,32 +76,30 @@ export default class ConstraintSolver {
   }
 
   /**
-   * Registers/unregisters important methods to the performance profiler.
-   * @param {bool} value Whether to profile (register) or not (unregister).
+   * Registers/unregisters important methods to `this.performanceProfiler`.
+   * @param {bool} value Whether to register (true) or unregister (false).
    */
   profileFunctions(value) {
     if (value) {
       this.initializeWaveMatrix = this.performanceProfiler.register(this.initializeWaveMatrix, false);
       this.setTiles = this.performanceProfiler.register(this.setTiles, false);
-      this.getLeastEntropyUnsolvedCellPosition = this.performanceProfiler.register(this.getLeastEntropyUnsolvedCellPosition, false);
-      this.getShannonEntropy = this.performanceProfiler.register(this.getShannonEntropy, true);
+      this.getCellToObservePosition = this.performanceProfiler.register(this.getCellToObservePosition, false);
       this.observe = this.performanceProfiler.register(this.observe, false);
       this.propagate = this.performanceProfiler.register(this.propagate, false);
     } else {
       this.initializeWaveMatrix = this.performanceProfiler.unregister(this.initializeWaveMatrix);
       this.setTiles = this.performanceProfiler.unregister(this.setTiles);
-      this.getLeastEntropyUnsolvedCellPosition = this.performanceProfiler.unregister(this.getLeastEntropyUnsolvedCellPosition);
-      this.getShannonEntropy = this.performanceProfiler.unregister(this.getShannonEntropy);
+      this.getCellToObservePosition = this.performanceProfiler.unregister(this.getCellToObservePosition);
       this.observe = this.performanceProfiler.unregister(this.observe);
       this.propagate = this.performanceProfiler.unregister(this.propagate);
     }
   }
 
   /**
-   * Initializes each cell in this.waveMatrix to have every pattern be possible.
-   * @param {number} numPatterns Used to create PossiblePatternBitmasks for cells.
-   * @param {number} width The width to set this.waveMatrix to.
-   * @param {number} height The height to set this.waveMatrix to.
+   * Initializes `this.waveMatrix` to a 2D grid of `Cell`s which have their possible patterns set to all.
+   * @param {number} numPatterns Used as the size of the `Cell`'s `PossiblePatternBitmasks`.
+   * @param {number} width The width to set `this.waveMatrix` to.
+   * @param {number} height The height to set `this.waveMatrix` to.
    */
   initializeWaveMatrix(numPatterns, width, height) {
     this.waveMatrix = [];
@@ -99,12 +116,12 @@ export default class ConstraintSolver {
 
   /**
    * Executes the user's set tile instructions.
-   * @param {SetTileInstruction[]} setTileInstructions 
-   * @param {AdjacentPatternsMap[]} adjacencies
+   * @param {SetTileInstruction[]} setTileInstructions Stores which `Cell`s have a limited choice in the possible patterns they can be and what those possible patterns are.
+   * @param {AdjacentPatternsMap[]} adjacencies The adjacent patterns in each direction of every pattern.
    */
   setTiles(setTileInstructions, adjacencies) {
     for (const [y, x, tilePatternsBitmask] of setTileInstructions) {
-      if (y < 0 || y > this.waveMatrix.length-1 || x < 0 || x > this.waveMatrix[0].length-1) {
+      if (y < 0 || y > this.waveMatrix.length - 1 || x < 0 || x > this.waveMatrix[0].length - 1) {
         console.warn("A set tile instruction asks for a position outside of the wave matrix. Ignoring this instruction.");
         continue;
       }
@@ -115,100 +132,33 @@ export default class ConstraintSolver {
   }
 
   /**
-   * Returns the position of the least entropy unsolved (entropy > 0) cell. If all cells are solved, returns [-1, -1].
-   * @param {number[]} weights
-   * @returns {number[]} The position of the cell ([y, x]) or [-1, -1] if all cells are solved.
+   * Chooses a cell to be observed using a cell selection heuristic.
+   * @param {number[]} lastObservedCellPosition Used by Lexical.
+   * @param {number[]} weights Used by Least Shannon Entropy.
+   * @returns {number[]} The [y, x] coordinate of the `Cell` to observe.
    */
-  getLeastEntropyUnsolvedCellPosition(weights) {
-    /*
-      Build an array containing the positions of all cells tied with the least entropy
-      Return the position of a random cell from that array
-    */
-
-    let leastEntropy = Infinity;
-    let leastEntropyCellPositions = [];
-
-    for (let y = 0; y < this.waveMatrix.length; y++) {
-    for (let x = 0; x < this.waveMatrix[0].length; x++) {
-      const entropy = this.getShannonEntropy(this.waveMatrix[y][x], weights);
-      if (entropy < leastEntropy && entropy > 0) {
-        leastEntropy = entropy;
-        leastEntropyCellPositions = [[y, x]];
-      }
-      else if (entropy === leastEntropy) {
-        leastEntropyCellPositions.push([y, x]);
-      }
-    }}
-
-    const len = leastEntropyCellPositions.length;
-    if (len > 0) return leastEntropyCellPositions[Math.floor(Math.random() * len)];	// random element (cell position)
-    else return [-1, -1];
+  getCellToObservePosition(lastObservedCellPosition, weights) {
+    return lexical(this.waveMatrix, lastObservedCellPosition);
+    //return leastShannonEntropy(waveMatrix, weights);
   }
 
   /**
-   * Returns the Shannon Entropy of a cell using its possible patterns and those patterns' weights.
-   * @param {PossiblePatternsBitmask} bitmask 
-   * @param {number[]} weights 
-   * @returns {number}
-   */
-  getShannonEntropy(bitmask, weights) {
-    const possiblePatterns = bitmask.toArray();
-
-    if (possiblePatterns.length === 0) throw new Error("Contradiction found.");
-    if (possiblePatterns.length === 1) return 0;	// what the calculated result would have been
-
-    let sumOfWeights = 0;
-    let sumOfWeightLogWeights = 0;
-    for (const i of possiblePatterns) {
-      const w = weights[i];
-      sumOfWeights += w;
-      sumOfWeightLogWeights += w * Math.log(w);
-    }
-
-    return Math.log(sumOfWeights) - sumOfWeightLogWeights/sumOfWeights;
-  }
-
-  /**
-   * Picks a pattern for a cell in this.waveMatrix to become.
-   * @param {number} y The y position/index of the cell.
-   * @param {number} x The x position/index of the cell.
-   * @param {number[]} weights 
+   * Given the set of possible patterns a `Cell` in `this.waveMatrix` has,
+   * chooses one of those patterns using a pattern selection heuristic.
+   * @param {number} y The y position of `Cell` to observe in `this.waveMatrix`.
+   * @param {number} x The x position of `Cell` to observe in `this.waveMatrix`.
+   * @param {number[]} weights Used by Weighted Random.
    */
   observe(y, x, weights) {
-    // Uses weighted random
-    // https://dev.to/jacktt/understanding-the-weighted-random-algorithm-581p
-
-    const possiblePatterns = this.waveMatrix[y][x].toArray();
-
-    const possiblePatternWeights = [];	// is parallel with possiblePatterns
-    let totalWeight = 0;
-    for (const i of possiblePatterns) {
-      const w = weights[i];
-      possiblePatternWeights.push(w);
-      totalWeight += w;
-    }
-
-    const random = Math.random() * totalWeight;
-
-    let cursor = 0;
-    for (let i = 0; i < possiblePatternWeights.length; i++) {
-      cursor += possiblePatternWeights[i];
-      if (cursor >= random) {
-        this.waveMatrix[y][x].clear();
-        this.waveMatrix[y][x].setBit(possiblePatterns[i]);
-        return;
-      }
-    }
-
-    throw new Error("A pattern wasn't chosen within the for loop");
+    return weightedRandom(this.waveMatrix, y, x, weights);
   }
 
   /**
-   * Adjusts the possible patterns of each cell affected by the observation of a cell.
-   * @param {number} y The y position/index of the observed cell.
-   * @param {number} x The x position/index of the observed cell.
-   * @param {AdjacentPatternsMap[]} adjacencies
-   * @returns {boolean} Whether a contradiction was created or not.
+   * Adjusts the possible patterns of all `Cell`s affected by the observation of a `Cell`.
+   * @param {number} y The y position of the observed `Cell` in `this.waveMatrix`.
+   * @param {number} x The x position of the observed `Cell` in `this.waveMatrix`.
+   * @param {AdjacentPatternsMap[]} adjacencies The adjacent patterns in each direction of every pattern.
+   * @returns {boolean} Whether a contradiction was created.
    */
   propagate(y, x, adjacencies) {
     const queue = new Queue();

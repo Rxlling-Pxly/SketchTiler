@@ -1,16 +1,15 @@
 /**
  * A linked list-based queue implementation with an O(1) enqueue/dequeue.
- * Isn't much faster than an array-based queue in practice due to CPU caching.
+ * Is tied in performance with an list-based queue in practice due to CPU caching.
+ * See queueBenchmark.js in the archive folder to witness it for yourself.
  */
 export default class Queue {
   front = null;
   back = null;
   length = 0;
 
-  /**
-   * Adds `element` to the back of the queue.
-   * @param {any} element
-   */
+  /** Adds `element` to the back of the queue.
+   *  @param {any} element */
   enqueue(element) {
     const node = new Node(element);
 
@@ -25,10 +24,8 @@ export default class Queue {
     this.length++;
   }
 
-  /**
-   * Returns the element at the front of the queue if there is one. Otherwise, returns `null`.
-   * @returns {any | null}
-   */
+  /** Returns the element at the front of the queue if there is one. Otherwise, returns `null`.
+   *  @returns {any | null} */
   dequeue() {
     if (this.length === 0) return null;
 
