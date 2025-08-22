@@ -8,8 +8,11 @@ export default class Queue {
   back = null;
   length = 0;
 
-  /** Adds `element` to the back of the queue.
-   *  @param {any} element */
+  /**
+   * Adds `element` to the back of the queue.
+   * @param {any} element
+   * @returns {void}
+   */
   enqueue(element) {
     const node = new Node(element);
 
@@ -24,10 +27,12 @@ export default class Queue {
     this.length++;
   }
 
-  /** Returns the element at the front of the queue if there is one. Otherwise, returns `null`.
-   *  @returns {any | null} */
+  /**
+   * Returns the element at the front of the queue if there is one. Otherwise, returns `undefined`.
+   * @returns {any | undefined}
+   */
   dequeue() {
-    if (this.length === 0) return null;
+    if (this.length === 0) return undefined;
 
     const element = this.front.data;
     this.front = this.front.next;

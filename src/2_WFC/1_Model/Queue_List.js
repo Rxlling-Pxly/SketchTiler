@@ -5,21 +5,23 @@
  */
 export default class Queue {
   list = [];
-  length = 0;
+  
+  get length() { return this.list.length; }
 
-  /** Adds `element` to the back of the queue.
-   *  @param {any} element */
+  /**
+   * Adds `element` to the back of the queue.
+   * @param {any} element
+   * @returns {void}
+   */
   enqueue(element) {
     this.list.push(element);
-    this.length++;
   }
 
-  /** Returns the element at the front of the queue if there is one. Otherwise, returns `null`.
-   *  @returns {any | null} */
+  /**
+   * Returns the element at the front of the queue if there is one. Otherwise, returns `undefined`.
+   * @returns {any | undefined}
+   */
   dequeue() {
-    if (this.length === 0) return null;
-    
-    this.length--;
     return this.list.shift();
   }
 }

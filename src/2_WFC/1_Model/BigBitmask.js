@@ -30,6 +30,7 @@ export default class BigBitmask {
    * @example 0 (decimal) -> 1 (binary)
    * @example 3 (decimal) -> 1000 (binary)
    * @param {number} index
+   * @returns {number}
    */
   static indexToBitmask(index) {
     return 1 << index;
@@ -39,6 +40,7 @@ export default class BigBitmask {
    * Returns whether two `BigBitmasks` have identical bit values.
    * @param {BigBitmask} bb1
    * @param {BigBitmask} bb2
+   * @returns {boolean}
    */
   static EQUALS(bb1, bb2) {
     for (let i = 0; i < bb1.bits.length; i++)
@@ -51,6 +53,7 @@ export default class BigBitmask {
    * Returns a new `BigBitmask` that's the result of a bitwise AND (&) operation on two other `BigBitmask`s.
    * @param {BigBitmask} bb1
    * @param {BigBitmask} bb2
+   * @returns {BigBitmask}
    */
   static AND(bb1, bb2) {
     const result = new BigBitmask(bb1.bits.length * 32);
@@ -64,6 +67,7 @@ export default class BigBitmask {
   /**
    * Returns a new `BigBitmask` with identical bit values to `source`.
    * @param {BigBitmask} source
+   * @returns {BigBitmask}
    */
   static createDeepCopy(source) {
     const copy = new BigBitmask(0);
@@ -78,6 +82,7 @@ export default class BigBitmask {
    * e.g. `const b = new BigBitmask(100).setBit(50);`
    * 
    * @param {number} index
+   * @returns {this}
    */
   setBit(index) {
     const arrayIndex = Math.floor(index / 32);
@@ -85,12 +90,18 @@ export default class BigBitmask {
     return this;
   }
 
-  /** Unsets all bits to 0. */
+  /**
+   * Unsets all bits to 0.
+   * @returns {void}
+   */
   clear() {
     this.bits.fill(0);
   }
 
-  /** Returns whether all bits are 0. */
+  /**
+   * Returns whether all bits are 0.
+   * @returns {boolean}
+   */
   isEmpty() {
     for (const Uint32 of this.bits)
       if (Uint32 !== 0) return false;
@@ -102,6 +113,7 @@ export default class BigBitmask {
    * Unsets any set bits in this `BigBitmask` that are unset in `other`.
    * This method is analogous to a bitwise AND assignment (&=) operation.
    * @param {BigBitmask} other
+   * @returns {void}
    */
   intersectWith(other) {
     for (let i = 0; i < this.bits.length; i++)
@@ -112,6 +124,7 @@ export default class BigBitmask {
    * Sets any unset bits in this `BigBitmask` that are set in `other`.
    * This method is analogous to a bitwise OR assignment (|=) operation.
    * @param {BigBitmask} other
+   * @returns {void}
    */
   mergeWith(other) {
     for (let i = 0; i < this.bits.length; i++)
@@ -122,6 +135,7 @@ export default class BigBitmask {
    * Returns an array containing the indices of all set bits in this `BigBitmask`.
    * @example 1 (binary) -> [0] (decimal)
    * @example 1010 (binary) -> [1, 3] (decimal)
+   * @returns {number[]}
    */
   toArray() {
     // Extract all set bits from the Bitmask and push their indices into result

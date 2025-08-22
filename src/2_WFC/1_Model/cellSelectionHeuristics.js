@@ -7,8 +7,8 @@
  * However, Tiny Town is not one of those tilesets.
  * 
  * @param {Cell[][]} waveMatrix A 2D grid of `Cell`s, where each `Cell` corresponds to a tile in the image being generated and stores the possible patterns that tile can yield from.
- * @param {number[]} lastObservedCellPosition The [y, x] coordinate of the last cell that was observed. Used to skip the processing of already observed `Cell`s.
- * @returns {number} The [y, x] coordinate of the `Cell` to observe. If all cells are solved, returns [-1, -1].
+ * @param {Uint32Array} lastObservedCellPosition The [y, x] coordinate of the last cell that was observed. Used to skip the processing of already observed `Cell`s.
+ * @returns {Uint32Array | null} The [y, x] coordinate of the `Cell` to observe. If all cells are solved, returns `null`.
  */
 export function lexical(waveMatrix, lastObservedCellPosition) {
     let [startY, startX] = lastObservedCellPosition;
@@ -16,12 +16,12 @@ export function lexical(waveMatrix, lastObservedCellPosition) {
     for (let y = startY; y < waveMatrix.length; y++) {
         for (let x = startX; x < waveMatrix[0].length; x++) {
             const numPossiblePatterns = waveMatrix[y][x].toArray().length;
-            if (numPossiblePatterns > 1) return [y, x];
+            if (numPossiblePatterns > 1) return new Uint32Array([y, x]);
         }
         startX = 0;
     }
 
-    return [-1, -1];
+    return null;
 }
 
 /**
@@ -33,8 +33,9 @@ export function lexical(waveMatrix, lastObservedCellPosition) {
  * 
  * This heuristic is suitable for all tilesets.
  * 
- * @param {number[]} weights The number of occurrances of every pattern.
- * @returns {number[]} The [y, x] coordinate of the `Cell` to observe. If all cells are solved, returns [-1, -1].
+ * @param {Cell[][]} waveMatrix A 2D grid of `Cell`s, where each `Cell` corresponds to a tile in the image being generated and stores the possible patterns that tile can yield from.
+ * @param {Uint32Array} weights The number of occurrances of every pattern.
+ * @returns {Uint32Array | null} The [y, x] coordinate of the `Cell` to observe. If all cells are solved, returns `null`.
  */
 export function leastShannonEntropy(waveMatrix, weights) {
     let leastEntropy = Infinity;
@@ -46,22 +47,23 @@ export function leastShannonEntropy(waveMatrix, weights) {
 
       if (entropy < leastEntropy && entropy > 0) {
         leastEntropy = entropy;
-        leastEntropyCellPositions = [[y, x]];
+        leastEntropyCellPositions = [new Uint32Array([y, x])];
       }
       else if (entropy === leastEntropy) {
-        leastEntropyCellPositions.push([y, x]);
+        leastEntropyCellPositions.push(new Uint32Array([y, x]));
       }
     }}
 
     if (leastEntropyCellPositions.length > 0)
         return leastEntropyCellPositions[Math.floor(Math.random() * leastEntropyCellPositions.length)];
     else
-        return [-1, -1];
+        return null;
 }
 /**
  * Returns the Shannon Entropy of a `Cell` using its possible patterns and those patterns' weights.
  * @param {PossiblePatternsBitmask} possiblePatternsBitmask Contains the `Cell`'s possible patterns.
- * @param {number[]} weights The number of occurrances of every pattern.
+ * @param {Uint32Array} weights The number of occurrances of every pattern.
+ * @returns {number}
  */
 function getShannonEntropy(possiblePatternsBitmask, weights) {
     const possiblePatterns = possiblePatternsBitmask.toArray();

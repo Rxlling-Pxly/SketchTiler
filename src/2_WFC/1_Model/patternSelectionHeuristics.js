@@ -3,7 +3,8 @@
  * @param {Cell[][]} waveMatrix A 2D grid of `Cell`s, where each `Cell` corresponds to a tile in the image being generated and stores the possible patterns that tile can yield from.
  * @param {number} y The y position of the `Cell` to observe in `waveMatrix`.
  * @param {number} x The y position of the `Cell` to observe in `waveMatrix`.
- * @param {number[]} weights The number of occurrances of every pattern.
+ * @param {Uint32Array} weights The number of occurrances of every pattern.
+ * @returns {void}
  */
 export function weightedRandom(waveMatrix, y, x, weights) {
     // This implementation is based off the following:

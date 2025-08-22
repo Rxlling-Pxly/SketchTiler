@@ -19,6 +19,7 @@ export default class WFCModel {
    * @param {TilemapImage[]} images The images to learn. If you only desire to learn one, pass an array with a single image in it.
    * @param {number} N The width and height of the patterns (in tiles).
    * @param {bool} profilePerformance Whether to profile the performance of this function and display it in the console. (Default = false)
+   * @returns {void}
    */
   learn(images, N, profilePerformance = false) {
     this.imageLearner.learn(images, N, profilePerformance);
@@ -31,6 +32,7 @@ export default class WFCModel {
    * @param {number} x
    * @param {number} y
    * @param {number[]} ids
+   * @returns {void}
    */
   setTile(x, y, ids) {
     const combinedTilePatternsBitmask = new BigBitmask(this.imageLearner.patterns.length);
@@ -45,7 +47,10 @@ export default class WFCModel {
     this.setTilesInstructions.push([y, x, combinedTilePatternsBitmask]);
   }
 
-  /** Clears all set tiles, allowing them to have any ID again. */
+  /**
+   * Clears all set tiles, allowing them to have any ID again.
+   * @returns {void}
+   */
   clearSetTiles() {
     this.setTilesInstructions = [];
   }

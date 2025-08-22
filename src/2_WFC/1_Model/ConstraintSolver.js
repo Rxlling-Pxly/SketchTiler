@@ -46,19 +46,21 @@ export default class ConstraintSolver {
     this.initializeWaveMatrix(weights.length, width, height);
     this.setTiles(setTileInstructions, adjacencies);
 
-    let lastObservedCellPosition = [0, 0];
+    let lastObservedCellPosition = new Uint32Array([0, 0]);
 
     let numAttempts = 1;
     while (numAttempts <= maxAttempts) { // use <= so `maxAttempts` is allowed to be set to 1
-      const [y, x] = this.getCellToObservePosition(lastObservedCellPosition, weights);
-      if (y === -1 && x === -1) {
+      
+      const position = this.getCellToObservePosition(lastObservedCellPosition, weights);
+      if (!position) {
         if (logProgress) console.log(`solved in ${numAttempts} attempt(s)`);
         if (profilePerformance) this.performanceProfiler.logData();
         return true;
       }
+      const [y, x] = position;
 
       this.observe(y, x, weights);
-      lastObservedCellPosition = [y, x];
+      lastObservedCellPosition.set([y, x]);
 
       if (logProgress) console.log("propagating...");
       const contradictionCreated = this.propagate(y, x, adjacencies);
@@ -66,7 +68,7 @@ export default class ConstraintSolver {
         this.initializeWaveMatrix(weights.length, width, height);
         this.setTiles(setTileInstructions, adjacencies);
         numAttempts++;
-        lastObservedCellPosition = [0, 0];
+        lastObservedCellPosition = new Uint32Array([0, 0]);
       }
     }
 
@@ -133,13 +135,15 @@ export default class ConstraintSolver {
 
   /**
    * Chooses a cell to be observed using a cell selection heuristic.
-   * @param {number[]} lastObservedCellPosition Used by Lexical.
-   * @param {number[]} weights Used by Least Shannon Entropy.
-   * @returns {number[]} The [y, x] coordinate of the `Cell` to observe.
+   * @param {Uint32Array} lastObservedCellPosition Used by Lexical.
+   * @param {Uint32Array} weights Used by Least Shannon Entropy.
+   * @returns {Uint32Array} The [y, x] coordinate of the `Cell` to observe.
    */
   getCellToObservePosition(lastObservedCellPosition, weights) {
+    // Uncomment the cell selection heuristic you wish to use.
+
     return lexical(this.waveMatrix, lastObservedCellPosition);
-    //return leastShannonEntropy(waveMatrix, weights);
+    //return leastShannonEntropy(this.waveMatrix, weights);
   }
 
   /**
@@ -150,6 +154,8 @@ export default class ConstraintSolver {
    * @param {number[]} weights Used by Weighted Random.
    */
   observe(y, x, weights) {
+    // Uncomment the pattern selection heuristic you wish to use.
+
     return weightedRandom(this.waveMatrix, y, x, weights);
   }
 

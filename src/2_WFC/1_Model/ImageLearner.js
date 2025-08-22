@@ -29,6 +29,7 @@ export default class ImageLearner {
    * @param {TilemapImage[]} images The images to learn.
    * @param {number} N The width and height of the patterns (in tiles).
    * @param {bool} profilePerformance Whether to profile the performance of this function and display it in the console.
+   * @returns {void}
    */
   learn(images, N, profilePerformance) {
     this.patterns = [];
@@ -49,6 +50,7 @@ export default class ImageLearner {
   /**
    * Registers/unregisters important methods to `this.performanceProfiler`.
    * @param {bool} value Whether to register (true) or unregister (false).
+   * @returns {void}
    */
   profileFunctions(value) {
     if (value) {
@@ -70,6 +72,7 @@ export default class ImageLearner {
    * Populates `this.patterns` and `this.weights`.
    * @param {TilemapImage[]} images The images to learn the patterns and their weights from.
    * @param {number} N The width and height of the patterns (in tiles).
+   * @returns {void}
    */
   learnPatternsAndWeights(images, N) {
     /*
@@ -111,7 +114,7 @@ export default class ImageLearner {
    */
   learnPattern(image, N, globalY, globalX) {
     const pattern = [];
-    for (let relativeY = 0; relativeY < N; relativeY++) pattern[relativeY] = [];
+    for (let relativeY = 0; relativeY < N; relativeY++) pattern[relativeY] = new Uint32Array(N);
 
     for (let relativeY = 0; relativeY < N; relativeY++) {
     for (let relativeX = 0; relativeX < N; relativeX++) {
@@ -121,7 +124,10 @@ export default class ImageLearner {
     return pattern;
   }
 
-  /** Populates `this.adjacencies`. */
+  /**
+   * Populates `this.adjacencies`.
+   * @returns {void}
+   */
   learnAdjacencies() {
     /*
       Check each pattern against every pattern (including itself) in every direction.
@@ -165,6 +171,7 @@ export default class ImageLearner {
    * @param {Pattern} pattern1
    * @param {Direction} direction
    * @param {Pattern} pattern2
+   * @returns {boolean}
    */
   isToTheDirectionOf(pattern1, direction, pattern2) {
     /*
@@ -202,7 +209,10 @@ export default class ImageLearner {
     return true;
   }
 
-  /** Populates `this.tilesToPatterns`. */
+  /**
+   * Populates `this.tilesToPatterns`.
+   * @returns {void}
+   */
   populateTilesToPatterns() {
     for (let i = 0; i < this.patterns.length; i++) {
       const topLeftTileId = this.patterns[i][0][0];
