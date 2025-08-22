@@ -57,6 +57,8 @@ This two-pass pipeline lets users directly control the macro structure of their 
 ## Output
 Use the export buttons to download sketch data and/or tilemap data. Each zip file contains a snapshot of the associated canvas and a JSON file containing data that can be used in future SketchTiler sessions (sketch exports) or in a Phaser scene (map exports). 
 
+![](/img/map_gif.gif)(Sketchtiler-generated map in a Phaser game)
+
 ## Future work
 SketchTiler is still an active research prototype. Planned improvements include:
 
