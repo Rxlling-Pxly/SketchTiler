@@ -145,8 +145,8 @@ export default class Autotiler extends Phaser.Scene {
   async exportMap(zip){
     // add map data to the zip
     zip.file("tilemapData.json", JSON.stringify({
-      ground: this.groundImage,
-      structures: this.exportImage
+      ground: this.convertToSignedArray(this.groundImage),
+      structures: this.convertToSignedArray(this.exportImage)
     }));
 
     // make suggestions full opacity
@@ -181,6 +181,15 @@ export default class Autotiler extends Phaser.Scene {
     // generate zip
     const blob = await zip.generateAsync({ type: "blob" });
     saveAs(blob, `sketchtiler_export_${key}.zip`);
+  }
+
+  // converts unsigned ints back to signed 
+  convertToSignedArray(arr){
+    let signed2D = arr.map(row =>
+      row.map(v => v | 0)   // force into signed 32-bit space
+    );
+
+    return signed2D;
   }
   
 }
