@@ -1,6 +1,4 @@
-# Sketchtiler
-**TODO: place example images with sketch and output side-by-sides**
-
+# SketchTiler
 SketchTiler is a tilemap generation tool that transforms hand-drawn sketches into structured, game-ready maps. It enables quick ideation and prototyping using a simple structure pen interface and wave function collapse.
 
 **Ideal for:**
@@ -10,8 +8,12 @@ SketchTiler is a tilemap generation tool that transforms hand-drawn sketches int
 
 > This project is part of ongoing research. A link to our IEEE demo paper will be added here soon!
 
+| Sketch input | Output (w/ suggestion layer) |
+|--------------|------------------|
+| ![](/img/sketchImage.png) | ![](/img/map_suggestions.png) | 
+
 ## How to use
-Clone the repo and serve the project using any simple static server. For example:
+No build step required, this project is static HTML/JS/CSS. Clone the repo and serve the project using any simple static server. For example:
 
 **Using Python 3 (built-in):**
 ```bash
@@ -42,27 +44,31 @@ SketchTiler then:
 3. Renders a suggestion layer
 
 ### Wave Function Collapse
-All procedural generation in SketchTiler is powered by wave function collapse (WFC).
+All procedural generation in SketchTiler is powered by wave function collapse (WFC). WFC works by treating each cell in a grid as a “superposition” of all possible tiles. As cells are resolved (or collapsed) into specific tiles, the algorithm propagates adjacency constraints outward, ensuring that the surrounding cells remain consistent. This process repeats until the grid forms a coherent map that respects the rules learned from example data.
 
+In SketchTiler, WFC is applied in two stages:
 - *Structure generators*: Mini WFC models trained on example houses, forests, etc.
 - *Suggestion Layer*: A general WFC model trained on full tilemaps. Suggests background context around user-defined structures.
 
-**TODO: explain WFC + our implementation in more detail**
+Structure generators are used to generate user-sketched structures. The suggestion layer generates natural transitions and background context around the placed structures, ensuring the overall map feels coherent and complete.
+
+This two-pass pipeline lets users directly control the macro structure of their map through sketching, while WFC handles the micro details and stylistic consistency.
 
 ## Output
-Use the export buttons to download sketch data and/or tilemap data. Each zip file contains a snapshot of the assiciated canvas and a JSON file containing data that can be used in future Sketchtiler sessions (sketch exports) or in a Phaser scene (map exports). 
-
-**TODO: explain how to use exported map in a game**
-**TODO: explain exporting/importing sketch data**
+Use the export buttons to download sketch data and/or tilemap data. Each zip file contains a snapshot of the associated canvas and a JSON file containing data that can be used in future SketchTiler sessions (sketch exports) or in a Phaser scene (map exports). 
 
 ## Future work
-- general improvements
-- WFC improvements
-- LLM integration
-    - sketch-based suggestions
+SketchTiler is still an active research prototype. Planned improvements include:
+
+**WFC improvements**
+- Optimizations for speed and memory efficiency
+- Support for larger and more complex maps
+
+**AI integration**
+- Sketch-based suggestions via an AI-powered co-sketching agent that can add additional structures or complete unfinished sketches
+- Natural language prompts for structure placement (e.g., “add a forest here”)
 
 ## Acknowledgements
-- ADL
-- Gumin WFC
-- Tiny Town (Kenney)
-- ?
+- Professor Jim Whitehead and the Augmented Design Lab at UC Santa Cruz
+- Maxim Gumin's [WFC algorithm](https://github.com/mxgmn/WaveFunctionCollapse)
+- Kenney Assets [Tiny Town Tileset](https://kenney.nl/assets/tiny-town)
