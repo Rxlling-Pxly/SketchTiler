@@ -8,10 +8,12 @@ SketchTiler is a tilemap generation tool that transforms hand-drawn sketches int
 
 > This project is part of ongoing research. A link to our IEEE demo paper will be added here soon!
 
-| Sketch input | Suggestion layer | Final output |
-|--------------|------------------|--------------|
-| ![](/img/sketchImage.png) | ![](/img/map_suggestions.png) | ![](/img/tilemapImage.png) |
+| Sketch input | Suggestion layer |
+|--------------|------------------|
+| ![](/img/sketchImage.png) | ![](/img/map_suggestions.png) | 
 
+**Final output**
+![](/img/tilemapImage.png)
 
 ## How to use
 No build step required, this project is static HTML/JS/CSS. Clone the repo and serve the project using any simple static server. For example:
