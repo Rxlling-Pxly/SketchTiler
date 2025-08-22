@@ -1,5 +1,6 @@
 /**
- * @fileoverview Sketch canvas input handler for a shape-drawing system.
+ * @fileoverview
+ * Sketch canvas input handler for a shape-drawing system.
  * Supports drawing, undo/redo history, stroke normalization, and communication with a Phaser scene.
  * 
  * Dependencies:
@@ -8,6 +9,7 @@
  * - normalizeStrokes, inCanvasBounds, showDebugText (canvasUtils.js)
  * - undo, redo, getSnapshot (canvasHistory.js)
  */
+
 import { LineDisplayble, MouseDisplayable } from "./1_Classes/displayables.js";
 import { WorkingLine } from "./1_Classes/line.js";
 import { conf } from "./2_Utils/canvasConfig.js";
@@ -18,19 +20,15 @@ import { undo, redo, getSnapshot } from "./2_Utils/canvasHistory.js"
 const sketchCanvas = document.getElementById("sketch-canvas");
 const ctx = sketchCanvas.getContext("2d");
 
-/**
- * Current in-progress line.
- */
+/** Current in-progress line. */
 let workingLine = new WorkingLine({ 
 	points: [], 
 	thickness: conf.lineThickness, 
 	hue: 0, 
-	structure: null 
+	structure: null,
 });
 
-/**
- * Mouse cursor/tool.
- */ 
+/** Mouse cursor/tool. */ 
 let mouseObject = new MouseDisplayable({
 	x: 0,
 	y: 0,
@@ -38,13 +36,13 @@ let mouseObject = new MouseDisplayable({
 	active: false,
 }, conf.lineThickness);
 
-let displayList = []; 		// Displayed strokes currently on canvas.
-let redoDisplayList = [];	// Strokes removed via undo, recorded for redo support
+let displayList = [];     // Displayed strokes currently on canvas.
+let redoDisplayList = []; // Strokes removed via undo, recorded for redo support
 
-let undoStack = [];	// Snapshots of canvas state for undo operations
+let undoStack = []; // Snapshots of canvas state for undo operations
 let redoStack = []; // Snapshots of canvas state for redo operations
 
-let activeButton;	// Active structure type selected via button (e.g. 'house', 'tree').
+let activeButton; // Active structure type selected via button (e.g. 'house', 'tree').
 
 // Structure buttons setup
 for (const type in conf.structures) {
@@ -66,18 +64,16 @@ document.getElementById("house-button").click();
 const changeDraw = new Event("drawing-changed"); 
 sketchCanvas.addEventListener("drawing-changed", () => {
 	ctx.clearRect(0, 0, sketchCanvas.width, sketchCanvas.height);
-	for (const d of displayList) {
+	for (const d of displayList) 
 		d.display(ctx);
-	}
 });
 
 // Custom event for updating the mouse tool position.
 const movedTool = new Event("tool-moved");
 sketchCanvas.addEventListener("tool-moved", () => {
 	ctx.clearRect(0, 0, sketchCanvas.width, sketchCanvas.height);
-	for (const d of displayList) {
+	for (const d of displayList) 
 		d.display(ctx);
-	}
 	mouseObject.display(ctx);
 });
 
@@ -92,7 +88,7 @@ sketchCanvas.addEventListener("mousedown", (ev) => {
 	}, conf.lineThickness);
 
 	// Start a stroke
-	if(inCanvasBounds(mouseObject.mouse, sketchCanvas)){ 
+	if (inCanvasBounds(mouseObject.mouse, sketchCanvas)){ 
 		// save current canvas state before adding a stroke
 		undoStack.push(getSnapshot());
 
@@ -101,7 +97,7 @@ sketchCanvas.addEventListener("mousedown", (ev) => {
 			points: [mouseObject.mouse],
 			thickness: conf.lineThickness,
 			hue: mouseObject.mouse.hue,
-			structure: activeButton
+			structure: activeButton,
 		};
 
 		// add working line to displayList
@@ -128,7 +124,7 @@ sketchCanvas.addEventListener("mousemove", (ev) => {
 
 	// Draw a stroke (if cursor is active)
 	if (mouseObject.mouse.active) {
-		if(inCanvasBounds({ x: mouseObject.mouse.x, y: mouseObject.mouse.y }, sketchCanvas)){ 
+		if (inCanvasBounds({ x: mouseObject.mouse.x, y: mouseObject.mouse.y }, sketchCanvas)){ 
 			// add new point to working line
 			workingLine.points.push({
 				x: mouseObject.mouse.x,
@@ -164,7 +160,7 @@ sketchCanvas.addEventListener("mouseup", (ev) => {
 	} else {
 		// normalize strokes (if normalize toggle is checked)
 		normalizing = document.getElementById("normalize-toggle").checked;
-		if(normalizing) normalizeStrokes(displayList, sketchCanvas);
+		if (normalizing) normalizeStrokes(displayList, sketchCanvas);
 
 		// clear redo history
 		redoStack = [];
@@ -226,7 +222,7 @@ let normalizing = normalizeToggle.checked;
 normalizeToggle.onclick = () => {
 	// update normalizing tracker bool to reflect toggle value
 	normalizing = document.getElementById("normalize-toggle").checked;
-	if(normalizing){ 
+	if (normalizing){ 
 		normalizeStrokes(displayList, sketchCanvas); 
 		sketchCanvas.dispatchEvent(changeDraw); // Re-render the canvas after simplifying
 	}
@@ -235,7 +231,7 @@ normalizeToggle.onclick = () => {
 // Undo last action and re-render canvas.
 const undoButton = document.getElementById(`undo-button`);
 undoButton.onclick = () => {
-	if(undoStack.length === 0){ return; } // nothing to undo
+	if (undoStack.length === 0) return; // nothing to undo
 
 	// perform undo and push undone data to redo stack
 	redoStack.push(undo(undoStack.pop()));
@@ -247,7 +243,7 @@ undoButton.onclick = () => {
 // Redo last undone action and re-render canvas.
 const redoButton = document.getElementById(`redo-button`);
 redoButton.onclick = () => {
-	if(redoStack.length === 0){ return; } // nothing to redo
+	if (redoStack.length === 0) return; // nothing to redo
 
 	// perform redo and push redone data to undo stack
 	undoStack.push(redo(redoStack.pop()));
@@ -262,12 +258,12 @@ redoButton.onclick = () => {
  * - Ctrl/Cmd + Shift + Z → Redo
  */
 document.addEventListener('keydown', (e) => {
-	if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z"){
+	if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
 		// Ctrl/Cmd + Shift + Z → Redo
-		if(e.shiftKey){ document.getElementById("redo-button").click(); }
+		if (e.shiftKey) document.getElementById("redo-button").click();
 
 		// Ctrl/Cmd + Z → Undo
-		else { document.getElementById("undo-button").click(); }
+		else document.getElementById("undo-button").click();
 	}
 });
 
@@ -276,9 +272,9 @@ document.addEventListener('keydown', (e) => {
  * @param {"display"|"redo"} [l] - Which list to return (displayList or redoDisplayList).
  * @returns {LineDisplayble[]}
  */
-export function getDisplayList(l){
-	if(!l || l.toLowerCase() === "display") return displayList;
-	else if(l.toLowerCase() === "redo") return redoDisplayList;
+export function getDisplayList(l) {
+	if (!l || l.toLowerCase() === "display") return displayList;
+	else if (l.toLowerCase() === "redo") return redoDisplayList;
 }
 
 
@@ -287,12 +283,9 @@ export function getDisplayList(l){
  * @param {LineDisplayble[]} data - New list of strokes.
  * @param {"undo"|"redo"} [key="undo"] - Which list to update.
  */
-export function setDisplayList(data, key){
-	if(!key || key.toLowerCase() === "undo"){
-		displayList = data;
-	} else if(key.toLowerCase() === "redo"){
-		redoDisplayList = data;
-	}
+export function setDisplayList(data, key) {
+	if (!key || key.toLowerCase() === "undo") displayList = data;
+	else if (key.toLowerCase() === "redo") redoDisplayList = data;
 }
 
 // EXPORTS
