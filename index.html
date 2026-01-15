@@ -12,96 +12,100 @@
 
       <!-- SKETCHTILER APP -->
       <div id="app">
-        <!-- sketchpad buttons -->
-        <div id="buttons">
-          <!-- STRUCTURE BUTTONS -->
-          <div id="structure_buttons">
-            <button id="house-button" class="house_button">House</button>
-            <button id="forest-button" class="forest_button">Forest</button>
-            <button id="fence-button" class="fence_button">Fence</button>
-            <button id="path-button" class="path_button">Path</button>
-          </div>
 
-          <!-- different spacing for smaller buttons -->
-          <div id="smaller_buttons">
-            <button id="undo-button" class="undo_button">U</button>
-            <button id="redo-button" class="undo_button">R</button>
-            <button id="lasso-button" class="undo_button">L</button>
-          </div>
+        <!-- SKETCHPAD WITH BUTTONS-->
+        <div id="full-sketchpad">
 
-          <!-- Normalize and Clear Buttons-->
-           <div id="vertical_settings">
-              <button id="normalize-button" class="long_button">Normalize</button> 
-              <button id="clear-button" class="long_button">Clear</button> 
-           </div>
-        </div>
+          <!-- sketchpad buttons -->
+          <div id="buttons">
 
-        <!-- SKETCHPAD -->
-        <div id="sketchpad">
-          <canvas id="grid-canvas"></canvas>
-          <canvas id="sketch-canvas"></canvas>
-        </div>
-
-        <!-- GENERATE & EXTRA SETTINGS -->
-         <div id="bottom_buttons">
-          <button id="generate-button" class="generate_button">Generate</button>
-         </div>
-
-        <!-- PHASER -->
-        <div style="display:flex; overflow:hidden; gap: 1em;">
-          <div id="phaser"></div>
-          <div id="pattern-panel"></div>
-        </div>
-
-        <!-- DEMOS -->
-        <!-- WFC demo -->
-        <div id="wfc-demo">
-          <h2 class="title is-4">Controls</h2>
-          <div class="buttons mt-3">
-            <button id="generateBtn" class="button is-primary">Generate</button>
-            <button id="clearBtn" class="button is-warning">Clear</button>
-            <span id="overlay">
-              <input id="overlay-toggle"
-                type="checkbox" 
-                class="onoffswitch-checkbox"  
-                disabled
-              />
-              Toggle overlay
-            </span>
-            <span id="overlay2">
-              <input id="overlay2-toggle"
-                type="checkbox" 
-                class="onoffswitch-checkbox"  
-              />
-               Toggle overlay 2
-            </span>
-          </div>
-          
-          <div class="field">
-            <h3 class="title is-5">Get Average Duration</h3>
-            <label class="label">Number of Runs</label>
-            <div class="control">
-              <input id="numRunsInput" class="input" type="number" min="1" value="100">
+            <!-- STRUCTURE BUTTONS -->
+            <div id="structure_buttons">
+              <button id="house-button" class="house_button">House</button>
+              <button id="forest-button" class="forest_button">Forest</button>
+              <button id="fence-button" class="fence_button">Fence</button>
+              <button id="path-button" class="path_button">Path</button>
             </div>
-            <button id="averageBtn" class="button is-info">Generate</button>
+
+            <!-- different spacing for smaller buttons -->
+            <div id="smaller_buttons">
+              <button id="undo-button" class="undo_button">↶</button>
+              <button id="redo-button" class="undo_button">↻</button>
+              <button id="zoom-reset-button" class="undo_button">⛶</button>
+            </div>
+
+            <!-- Normalize and Clear Buttons-->
+            <div id="vertical_settings">
+                <button id="normalize-button" class="long_button">Normalize</button> 
+                <button id="clear-button" class="long_button">Clear</button> 
+            </div>
           </div>
 
-          <div id="progressWrapper" >
-            <progress id="progressBar" class="progress is-info" value="0" max="100">0%</progress>
+          <!-- Zoom indicator -->
+           <div id="zoom-indicator">
+            100%
+           </div>
+
+          <!-- SKETCHPAD -->
+          <div id="sketchpad">
+            <canvas id="grid-canvas"></canvas>
+            <canvas id="sketch-canvas"></canvas>
           </div>
 
-          <div id="thinking-icon" class="spinner" style="display: none;"></div>
+          <!-- OTHER SKETCHPAD INFORMATION -->
+          <!-- WFC demo -->
+          <div id="wfc-demo">
+            <h2 class="title is-4">Controls</h2>
+            <div class="buttons mt-3">
+              <span id="overlay">
+                <input id="overlay-toggle"
+                  type="checkbox" 
+                  class="onoffswitch-checkbox"  
+                  disabled
+                />
+                Toggle overlay
+              </span>
+              <span id="overlay2">
+                <input id="overlay2-toggle"
+                  type="checkbox" 
+                  class="onoffswitch-checkbox"  
+                />
+                Toggle overlay 2
+              </span>
+            </div>
+            <div id="profileMessage"></div>
+          </div>
 
-          <div id="profileMessage"></div>
+          <!-- GENERATE & EXTRA SETTINGS -->
+          <div id="bottom_buttons">
+            <button id="generate-button" class="generate_button">Generate</button>
+          </div>
         </div>
 
-        <div id="data">
-          <button id="update-input-button" class="button is-dark">[DEV] Update input</button>
+        <!-- Full output screen -->
+        <div id="output-panel">
 
-          <!-- EXPORTS -->
-          <div id="export-buttons">
-            <button id="export-map-button" class="button is-dark" disabled="true">Export map</button>
-            <button id="export-sketch-button" class="button is-dark" disabled="true">Export sketch</button>
+          <!-- Place holder for buttons -->
+          <div id="output-buttons">
+
+            <!-- output tool buttons -->
+            <div id="smaller_buttons">
+              <button id="lasso-button" class="select_button">Select</button>
+              <button id="lock-structures-button" class="select_button">Lock</button>
+            </div>
+          </div>
+
+          <!-- PHASER-->
+          <div style="display:flex; overflow:hidden; gap: 0;">
+            <div id="phaser"></div>
+            <div id="pattern-panel"></div>
+          </div>
+
+          <!-- DATA FOR OUTPUT -->
+          <div id="data">
+            <button id="update-input-button" class="export_button">[DEV] Update input</button>
+            <button id="export-map-button" class="export_button">Export map</button>
+            <button id="export-sketch-button" class="export_button">Export sketch</button>
           </div>
         </div>
       </div>
@@ -127,6 +131,20 @@
         </ul>
       </div>
       -->
+      <div id="bottom-row">
+          <!-- Puttin 2 WFC demos just for placeholder-->
+          <!-- Replce with layers and structures menu-->
+          <div style="display:flex; overflow:hidden; gap: 1em;">
+            <div id="phaser"></div>
+            <div id="pattern-panel"></div>
+          </div>
+
+          <!-- Eventually replace this with LLM chatbot-->
+          <div style="display:flex; overflow:hidden; gap: 1em;">
+            <div id="phaser"></div>
+            <div id="pattern-panel"></div>
+          </div>
+      </div>
     </div>
 
     <script type="module" src="/src/main.js"></script>

@@ -2,23 +2,60 @@
 
 #page {
   display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 #app {
   display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  background-color: #222;
+}
+
+#bottom-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  background-color: #222;
+}
+
+#full-sketchpad {
+  display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: #222;
+  position: relative;
 }
 
 #sketchpad {
   position: relative;
+  display: block;
+  width: 500px;
+  height: 400px;
 }
 
-#sketchpad > canvas {
+#sketchpad canvas {
   position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
   cursor: none;
+}
+
+#zoom-indicator {
+  position: absolute;
+  top: 82px;
+  left: 0px;
+  z-index: 10; /* 👈 above canvas */
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 12px;
+  pointer-events: none;
 }
 
 /* Defaults are 500px x 400px */
@@ -28,6 +65,22 @@
   overflow-y: auto;
   background: #222;
   padding: 10px;
+}
+
+#output-panel {
+  margin-top: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: flex-start;
+}
+
+#phaser canvas {
+  display: block;
+  margin: 0;
+  padding: 0;
 }
 
 /* index.css */
@@ -74,6 +127,23 @@
   justify-content: center;
   gap: 20px;
 }
+
+#output-buttons {
+  background-color: #333;
+  padding: 1rem;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+#data {
+  background-color: #333;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
 
 #structure_buttons {
   display: flex;
@@ -191,6 +261,22 @@
   box-shadow: none;
 }
 
+.select_button {
+  width: 83px;
+  height: 50px;
+  font-size: 20px;
+  border-width: medium;
+  border-style: solid;
+  border-color: white;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
+  color: white;
+  background-color: #222;
+  transition: transform 0.3s ease;
+  outline: none;
+  box-shadow: none;
+}
+
 .forest_button {
   width: 83px;
   height: 50px;
@@ -214,6 +300,22 @@
   border-width: medium;
   border-style: solid;
   border-color: #59B383;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
+  color: white;
+  background-color: #222;
+  transition: transform 0.3s ease;
+  outline: none;
+  box-shadow: none;
+}
+
+.export_button {
+  width: 170px;
+  height: 50px;
+  font-size: 20px;
+  border-width: medium;
+  border-style: solid;
+  border-color: white;
   font-family: 'Poppins', sans-serif;
   border-radius: 10px;
   color: white;
@@ -281,5 +383,17 @@
 .generate_button:hover {
   transform: translateY(-5px);
   background-color: #59B383;
+  color: #333;
+}
+
+.export_button:hover {
+  transform: translateY(-5px);
+  background-color: white;
+  color: #333;
+}
+
+.select_button:hover {
+  transform: translateY(-5px);
+  background-color: white;
   color: #333;
 }

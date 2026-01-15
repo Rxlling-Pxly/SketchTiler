@@ -14,7 +14,7 @@ const tilesetInfo = TILEMAP["tiny_town"];
  * Sets canvas sizes based on TILEMAP settings and draws a grid overlay.
  */
 export default function initSketchpad() {
-  const width = tilesetInfo.WIDTH * tilesetInfo.TILE_WIDTH;
+  const width = (tilesetInfo.WIDTH + 4) * tilesetInfo.TILE_WIDTH;
   const height = tilesetInfo.HEIGHT * tilesetInfo.TILE_WIDTH;
 
   const sketchpad = document.getElementById("sketchpad");
