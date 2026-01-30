@@ -50,11 +50,11 @@
   position: absolute;
   top: 82px;
   left: 0px;
-  z-index: 10; /* 👈 above canvas */
+  z-index: 10;
   padding: 4px 8px;
   background: rgba(0, 0, 0, 0.6);
   color: white;
-  font-size: 12px;
+  font-size: 20px;
   pointer-events: none;
 }
 
