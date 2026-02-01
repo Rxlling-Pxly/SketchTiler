@@ -15,20 +15,25 @@ import { WorkingLine } from "./1_Classes/line.js";
 import { conf } from "./2_Utils/canvasConfig.js";
 import { normalizeStrokes, inCanvasBounds, screenToPage, showDebugText } from "./2_Utils/canvasUtils.js"
 import { undo, redo, getSnapshot } from "./2_Utils/canvasHistory.js"
+import TILEMAP from "../4_Phaser/tilemap.js";
+
+const tilesetInfo = TILEMAP["tiny_town"];
 
 // Canvas setup
 const sketchCanvas = document.getElementById("sketch-canvas");
+const gridCanvas = document.getElementById("grid-canvas");
 const ctx = sketchCanvas.getContext("2d");
+const gridCtx = gridCanvas.getContext("2d");
 
 /** Current in-progress line. */
-let workingLine = new WorkingLine({ 
-	points: [], 
-	thickness: conf.lineThickness, 
-	hue: 0, 
+let workingLine = new WorkingLine({
+	points: [],
+	thickness: conf.lineThickness,
+	hue: 0,
 	structure: null,
 });
 
-/** Mouse cursor/tool. */ 
+/** Mouse cursor/tool. */
 let mouseObject = new MouseDisplayable({
 	x: 0,
 	y: 0,
@@ -46,23 +51,59 @@ let activeButton; // Active structure type selected via button (e.g. 'house', 't
 let currentActiveButton;
 
 //the zoom scale and offset
+//the zoom scale and offset
 let scale = 1.0;
 let panX = 0;
 let panY = 0;
+
+// Panning variables
+let isPanning = false;
+let startPanY = 0;
+let startPanX = 0;
+let spacePressed = false;
+
+// Draw the grid with current pan and scale
+export function drawGrid() {
+	gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+	gridCtx.save();
+	gridCtx.translate(panX, panY);
+	gridCtx.scale(scale, scale);
+
+	gridCtx.strokeStyle = "#DBDBDB";
+	gridCtx.lineWidth = 1; // Keep line width constant ? No, let it scale or not? User said "grid not changing with zooming", typically means checking if it stays 1px or scales. 
+	// Usually grid lines should pan and zoom. If we scale the context, they will zoom.
+	// If we want constant thickness we would divide lineWidth by scale. But user probably wants them to move with zoom.
+
+	// Draw grid lines covering the entire map area
+	const mapWidth = (tilesetInfo.WIDTH + 4) * tilesetInfo.TILE_WIDTH;
+	const mapHeight = tilesetInfo.HEIGHT * tilesetInfo.TILE_WIDTH;
+
+	gridCtx.beginPath();
+	for (let x = 0; x <= mapWidth; x += tilesetInfo.TILE_WIDTH) {
+		gridCtx.moveTo(x, 0);
+		gridCtx.lineTo(x, mapHeight);
+	}
+	for (let y = 0; y <= mapHeight; y += tilesetInfo.TILE_WIDTH) {
+		gridCtx.moveTo(0, y);
+		gridCtx.lineTo(mapWidth, y);
+	}
+	gridCtx.stroke();
+	gridCtx.restore();
+}
 
 // Structure buttons setup
 for (const type in conf.structures) {
 	const structure = conf.structures[type];
 	const button = document.getElementById(`${type.toLowerCase()}-button`);
-	if(!button) continue;
+	if (!button) continue;
 
 	// set activeButton to clicked button and change stroke attributes
 	button.onclick = () => {
 		mouseObject.mouse.hue = structure.color;
-		button.style.borderColor = structure.color;  
+		button.style.borderColor = structure.color;
 		activeButton = type;
 
-		if(currentActiveButton && currentActiveButton != button)
+		if (currentActiveButton && currentActiveButton != button)
 			currentActiveButton.classList.remove("active");
 
 		button.classList.add("active");
@@ -71,10 +112,10 @@ for (const type in conf.structures) {
 	}
 }
 // Default to 'house' for initial selected marker
-document.getElementById("house-button").click(); 
+document.getElementById("house-button").click();
 
 // Custom event for repainting the canvas after changes.
-const changeDraw = new Event("drawing-changed"); 
+const changeDraw = new Event("drawing-changed");
 sketchCanvas.addEventListener("drawing-changed", () => {
 	ctx.clearRect(0, 0, sketchCanvas.width, sketchCanvas.height);
 
@@ -83,7 +124,7 @@ sketchCanvas.addEventListener("drawing-changed", () => {
 	ctx.translate(panX, panY);
 	ctx.scale(scale, scale);
 
-	for (const d of displayList) 
+	for (const d of displayList)
 		d.display(ctx);
 
 	//returning the default 
@@ -97,9 +138,9 @@ sketchCanvas.addEventListener("tool-moved", () => {
 
 	ctx.save();
 	ctx.translate(panX, panY);
-	ctx.scale(scale,scale);
+	ctx.scale(scale, scale);
 
-	for (const d of displayList) 
+	for (const d of displayList)
 		d.display(ctx);
 
 	ctx.restore();
@@ -108,8 +149,25 @@ sketchCanvas.addEventListener("tool-moved", () => {
 
 // Start drawing a new stroke.
 sketchCanvas.addEventListener("mousedown", (ev) => {
+	if (spacePressed) {
+		isPanning = true;
+		startPanX = ev.clientX - panX;
+		startPanY = ev.clientY - panY;
+		sketchCanvas.style.cursor = "grabbing";
+		return;
+	}
+
 	//pages coords
 	const pageCoords = screenToPage(ev.offsetX, ev.offsetY, panX, panY, scale);
+
+	// Bounds check using page coordinates against the map size
+	const mapWidth = (tilesetInfo.WIDTH + 4) * tilesetInfo.TILE_WIDTH;
+	const mapHeight = tilesetInfo.HEIGHT * tilesetInfo.TILE_WIDTH;
+
+	if (pageCoords.x < 0 || pageCoords.x > mapWidth || pageCoords.y < 0 || pageCoords.y > mapHeight) {
+		return; // Click outside map bounds
+	}
+
 	// Update cursor
 	mouseObject = new MouseDisplayable({
 		x: ev.offsetX,
@@ -119,33 +177,51 @@ sketchCanvas.addEventListener("mousedown", (ev) => {
 	}, conf.lineThickness);
 
 	// Start a stroke
-	if (inCanvasBounds({x: ev.offsetX, y: ev.offsetY}, sketchCanvas)){ 
-		// save current canvas state before adding a stroke
-		undoStack.push(getSnapshot());
+	// if (inCanvasBounds({x: ev.offsetX, y: ev.offsetY}, sketchCanvas)){ // OLD CHECK
+	// New check is seemingly redundant if we check pageCoords, but inCanvasBounds checks if mouse is within the HTML canvas element. 
+	// We should allow drawing as long as we are inside the CANVAS element AND inside the MAP bounds.
+	// The event listener is on sketchCanvas, so ev.offsetX/Y are roughly inside.
 
-		// update new workingLine with mouseObject settings
-		workingLine = {
-			points: [pageCoords],
-			thickness: conf.lineThickness,
-			hue: mouseObject.mouse.hue,
-			structure: activeButton,
-		};
+	// save current canvas state before adding a stroke
+	undoStack.push(getSnapshot());
 
-		// add working line to displayList
-		displayList.push(new LineDisplayble(workingLine)); 
+	// update new workingLine with mouseObject settings
+	workingLine = {
+		points: [pageCoords],
+		thickness: conf.lineThickness,
+		hue: mouseObject.mouse.hue,
+		structure: activeButton,
+	};
 
-		// clear redo history
-		redoDisplayList = [];
+	// add working line to displayList
+	displayList.push(new LineDisplayble(workingLine));
 
-		// redraw canvas with new stroke + cursor position
-		sketchCanvas.dispatchEvent(changeDraw);
-		sketchCanvas.dispatchEvent(movedTool);
-	}
+	// clear redo history
+	redoDisplayList = [];
+
+	// redraw canvas with new stroke + cursor position
+	sketchCanvas.dispatchEvent(changeDraw);
+	sketchCanvas.dispatchEvent(movedTool);
+	// }
 });
 
 // Continue drawing stroke as mouse moves.
 sketchCanvas.addEventListener("mousemove", (ev) => {
+	if (isPanning) {
+		panX = ev.clientX - startPanX;
+		panY = ev.clientY - startPanY;
+		sketchCanvas.dispatchEvent(movedTool); // Triggers redraw of both
+		drawGrid(); // Make sure grid moves
+		return;
+	}
+
 	const pageCoords = screenToPage(ev.offsetX, ev.offsetY, panX, panY, scale);
+
+	// Bounds check for move
+	const mapWidth = (tilesetInfo.WIDTH + 4) * tilesetInfo.TILE_WIDTH;
+	const mapHeight = tilesetInfo.HEIGHT * tilesetInfo.TILE_WIDTH;
+	const outsideBounds = pageCoords.x < 0 || pageCoords.x > mapWidth || pageCoords.y < 0 || pageCoords.y > mapHeight;
+
 	// Update cursor
 	mouseObject = new MouseDisplayable({
 		x: ev.offsetX,
@@ -155,20 +231,20 @@ sketchCanvas.addEventListener("mousemove", (ev) => {
 	}, conf.lineThickness);
 
 	// Draw a stroke (if cursor is active)
-	if (mouseObject.mouse.active) {
-		if (inCanvasBounds({x: ev.offsetX, y:ev.offsetY}, sketchCanvas)){ 
-			// add new point to working line
-			workingLine.points.push({
-				x: pageCoords.x,
-				y: pageCoords.y,
-			});
+	if (mouseObject.mouse.active && !outsideBounds) {
+		// if (inCanvasBounds({x: ev.offsetX, y:ev.offsetY}, sketchCanvas)){ 
+		// add new point to working line
+		workingLine.points.push({
+			x: pageCoords.x,
+			y: pageCoords.y,
+		});
 
-			// add stroke to canvas
-			sketchCanvas.dispatchEvent(changeDraw);
+		// add stroke to canvas
+		sketchCanvas.dispatchEvent(changeDraw);
 
-			// enable exports
-			exportButton.disabled = false;
-		}
+		// enable exports
+		exportButton.disabled = false;
+		// }
 	}
 
 	// redraw sketch canvas to capture new cursor position
@@ -177,6 +253,12 @@ sketchCanvas.addEventListener("mousemove", (ev) => {
 
 // Finish drawing stroke and optionally normalize.
 sketchCanvas.addEventListener("mouseup", (ev) => {
+	if (isPanning) {
+		isPanning = false;
+		sketchCanvas.style.cursor = spacePressed ? "grab" : "auto";
+		return;
+	}
+
 	// Update cursor
 	mouseObject = new MouseDisplayable({
 		x: ev.offsetX,
@@ -186,7 +268,7 @@ sketchCanvas.addEventListener("mouseup", (ev) => {
 	}, conf.lineThickness);
 
 	// Finish stroke (if it is long enough)
-	if(workingLine.points.length <= conf.sizeThreshold){
+	if (workingLine && workingLine.points && workingLine.points.length <= conf.sizeThreshold) {
 		displayList.pop();  // remove accidental tiny stroke
 		undoStack.pop();	// also forget this canvas state
 	} else {
@@ -201,6 +283,21 @@ sketchCanvas.addEventListener("mouseup", (ev) => {
 		// redraw sketch canvas with new stroke + cursor position
 		sketchCanvas.dispatchEvent(changeDraw);
 		sketchCanvas.dispatchEvent(movedTool);
+	}
+});
+
+window.addEventListener("keydown", (e) => {
+	if (e.code === "Space" && !e.repeat) {
+		spacePressed = true;
+		sketchCanvas.style.cursor = "grab";
+	}
+});
+
+window.addEventListener("keyup", (e) => {
+	if (e.code === "Space") {
+		spacePressed = false;
+		isPanning = false;
+		sketchCanvas.style.cursor = "auto";
 	}
 });
 
@@ -244,6 +341,7 @@ sketchCanvas.addEventListener("wheel", (ev) => {
 	panY = mouseY - (mouseY - panY) * (scale / oldScale);
 
 	sketchCanvas.dispatchEvent(movedTool);
+	drawGrid(); // Update grid on zoom
 });
 
 // Resets zoom and pan
@@ -254,6 +352,8 @@ zoomResetButton.onclick = () => {
 	panY = 0;
 
 	zoomAmountDisplay.textContent = 100;
+
+	drawGrid(); // Reset grid
 }
 
 // Clears canvas and structure display list.
@@ -262,17 +362,17 @@ const clearPhaser = new CustomEvent("clearSketch");	// clears phaser canvas
 clearButton.onclick = () => {
 	// push canvas snapshot to undo stack before clearing
 	undoStack.push(getSnapshot());
-	
+
 	// clear display lists
 	displayList = [];
 	redoDisplayList = [];
-	
+
 	// clear canvas
 	ctx.clearRect(0, 0, sketchCanvas.width, sketchCanvas.height);
 	window.dispatchEvent(clearPhaser);		// clear phaser canvas
 	sketchCanvas.dispatchEvent(changeDraw);	// redraw sketch canvas 
 
-	exportButton.disabled = true;	
+	exportButton.disabled = true;
 };
 
 // Sends sketch data to Phaser via custom event.
@@ -280,10 +380,10 @@ const generateButton = document.getElementById("generate-button");
 generateButton.onclick = () => {
 	// label strokes with structure type
 	showDebugText(ctx, displayList);
-	
+
 	// sends sketch data to Phaser scene
-	const toPhaser = new CustomEvent("generate", { 
-		detail: {sketch: displayList, structures: conf.structures} 
+	const toPhaser = new CustomEvent("generate", {
+		detail: { sketch: displayList, structures: conf.structures }
 	});
 	window.dispatchEvent(toPhaser);
 }
@@ -294,8 +394,8 @@ normalizeToggle.onclick = () => {
 	// update normalizing tracker bool to reflect toggle value
 	//normalizing = document.getElementById("normalize-toggle").checked;
 	let normalizing = normalizeToggle.classList.toggle("active")
-	if (normalizing){ 
-		normalizeStrokes(displayList, sketchCanvas); 
+	if (normalizing) {
+		normalizeStrokes(displayList, sketchCanvas);
 		sketchCanvas.dispatchEvent(changeDraw); // Re-render the canvas after simplifying
 	}
 }
@@ -365,27 +465,27 @@ const exportButton = document.getElementById("export-sketch-button");
 exportButton.disabled = true;
 
 exportButton.addEventListener("click", async () => {
-    const zip = JSZip();
+	const zip = JSZip();
 	await exportSketch(zip)
 
 	// generate zip
-    const blob = await zip.generateAsync({ type: "blob" });
-    saveAs(blob, "sketchtiler_export_sketch.zip");
+	const blob = await zip.generateAsync({ type: "blob" });
+	saveAs(blob, "sketchtiler_export_sketch.zip");
 });
 
 // loads JSZip zip file with sketch data and sketch canvas snapshot
-export async function exportSketch(zip){
-    // add sketch data to the zip
-    zip.file("sketchData.json", JSON.stringify({
-      sketch: displayList,
-    }));
+export async function exportSketch(zip) {
+	// add sketch data to the zip
+	zip.file("sketchData.json", JSON.stringify({
+		sketch: displayList,
+	}));
 
-    // add sketch image to the zip
-    const canvas = document.getElementById("sketch-canvas");
-    const dataURL = canvas.toDataURL("image/PNG")
-    const base64Data = dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
+	// add sketch image to the zip
+	const canvas = document.getElementById("sketch-canvas");
+	const dataURL = canvas.toDataURL("image/PNG")
+	const base64Data = dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
 
-    zip.file("sketchImage.png", base64Data, { base64: true });
-	
+	zip.file("sketchImage.png", base64Data, { base64: true });
+
 	exportButton.disabled = true;
 }
