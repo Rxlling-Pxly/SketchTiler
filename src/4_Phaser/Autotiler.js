@@ -39,6 +39,23 @@ export default class Autotiler extends Phaser.Scene {
     this.groundModel = new WFCModel().learn(IMAGES.GROUND, 2);
     this.structsModel = new WFCModel().learn([...IMAGES.STRUCTURES, ...IMAGES.HOUSES], 2);
 
+    this.lassoEnabled = false;
+    this.lassoActive = false;
+    this.lassoPoints = [];
+    this.lassoGraphics = this.add.graphics().setDepth(999);
+    this.selectedTiles = new Set();
+    this.selectionGraphics = this.add.graphics();
+
+    this.lassoButton = document.getElementById("lasso-button");
+    this.lassoButton.addEventListener("click", () => {
+      this.lassoEnabled = !this.lassoEnabled;
+      this.lassoButton.classList.toggle("active", this.lassoEnabled);
+      if (!this.lassoEnabled) {
+        this.selectedTiles.clear();
+        this.selectionGraphics.clear();
+      }
+    });
+
     this.generator = {
       house: (region) => generateHouse({width: region.width, height: region.height}),
       path: (region) => console.log("TODO: link path generator", region),
@@ -63,7 +80,10 @@ export default class Autotiler extends Phaser.Scene {
         const pathLayer = generatePaths(result);
 
         this.displayMap(this.pathsMap, pathLayer, "tilemap");
-        this.displayMap(this.structsMap, result, "tilemap");
+        const sanitized = this.convertToSignedArray(result);
+        this.structsLayer = this.displayMap(this.structsMap, sanitized, "tilemap");
+        this.selectedTiles = new Set();
+        this.selectionGraphics = this.add.graphics();
       }
     });
 
@@ -80,6 +100,26 @@ export default class Autotiler extends Phaser.Scene {
 
     window.addEventListener("redoSketch", (e) => {
       //console.log("TODO: implement redo functionality");
+    });
+
+    this.input.on("pointerdown", (pointer) => {
+      if (!this.lassoEnabled || !this.structsLayer) return;
+      this.lassoActive = true;
+      this.lassoPoints = [pointer.positionToCamera(this.cameras.main)];
+    });
+
+    this.input.on("pointermove", (pointer) => {
+      if (!this.lassoActive) return;
+      const worldPoint = pointer.positionToCamera(this.cameras.main);
+      this.lassoPoints.push(worldPoint);
+      this.drawLasso();
+    });
+
+    this.input.on("pointerup", () => {
+      if (!this.lassoActive) return;
+      this.lassoActive = false;
+      this.selectTilesInLasso();
+      this.lassoGraphics.clear();
     });
   }
 
@@ -134,9 +174,10 @@ export default class Autotiler extends Phaser.Scene {
     });
 
     // make a layer to make new map visible
-    let tileset = map.addTilesetImage("tileset", tilesetName, 16, 16, 0, 0, gid);
-    map.createLayer(0, tileset, 0, 0, 1);
-  }	
+    const tileset = map.addTilesetImage("tileset", tilesetName, 16, 16, 0, 0, gid);
+    const layer = map.createLayer(0, tileset, 0, 0);
+    return layer;
+  }
 
   async exportMap(zip){
     // add map data to the zip
@@ -220,5 +261,49 @@ export default class Autotiler extends Phaser.Scene {
     }
 
     return tilemapImage;
+  }
+
+  drawLasso() {
+    this.lassoGraphics.clear();
+    this.lassoGraphics.lineStyle(2, 0x00ffff, 1);
+    this.lassoGraphics.beginPath();
+    if (this.lassoPoints.length > 1) {
+      this.lassoGraphics.moveTo(this.lassoPoints[0].x, this.lassoPoints[0].y);
+      for (let i = 1; i < this.lassoPoints.length; i++) {
+        this.lassoGraphics.lineTo(this.lassoPoints[i].x, this.lassoPoints[i].y);
+      }
+    }
+    this.lassoGraphics.strokePath();
+  }
+
+  selectTilesInLasso() {
+    const polygon = new Phaser.Geom.Polygon(this.lassoPoints);
+    this.selectedTiles.clear();
+    const mapWidth = this.structsLayer.tilemap.width;
+    const mapHeight = this.structsLayer.tilemap.height;
+    for (let y = 0; y < mapHeight; y++) {
+      for (let x = 0; x < mapWidth; x++) {
+        const worldX = x * this.tileSize + this.tileSize / 2;
+        const worldY = y * this.tileSize + this.tileSize / 2;
+        if (Phaser.Geom.Polygon.Contains(polygon, worldX, worldY)) {
+          this.selectedTiles.add(`${x},${y}`);
+        }
+      }
+    }
+    this.drawSelection();
+  }
+
+  drawSelection() {
+    this.selectionGraphics.clear();
+    this.selectionGraphics.lineStyle(2, 0xffff00, 1);
+    for (let key of this.selectedTiles) {
+      const [x, y] = key.split(",").map(Number);
+      this.selectionGraphics.strokeRect(
+        x * this.tileSize,
+        y * this.tileSize,
+        this.tileSize,
+        this.tileSize
+      );
+    }
   }
 }

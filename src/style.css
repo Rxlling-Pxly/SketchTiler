@@ -397,3 +397,9 @@
   background-color: white;
   color: #333;
 }
+
+.select_button.active {
+  background-color: #00ffff;
+  color: #333;
+  border-color: #00ffff;
+}
