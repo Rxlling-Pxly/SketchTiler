@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>SketchTiler Geometry Demo – Unified</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="sidebar">
+    <h1>Geometry Demo</h1>
+    <div class="section">
+      <label for="modeSelect"><strong>Mode</strong></label>
+      <select id="modeSelect">
+        <option value="l_rect">L-Shape – Rectangular</option>
+        <option value="l_tri">L-Shape – Triangulation</option>
+        <option value="donut_rect">Donut – Rectangular</option>
+        <option value="donut_tri">Donut – Triangulation</option>
+        <option value="general">General Polygon</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <button id="clearBtn">Clear</button>
+    </div>
+
+    <div class="section">
+      <strong>Layers</strong><br/>
+      <label><input type="checkbox" id="showRaw" checked> Raw Polygon</label><br/>
+      <label><input type="checkbox" id="showSnap" checked> Snapped Polygon</label><br/>
+      <label><input type="checkbox" id="showBoxes" checked> Bounding Boxes</label><br/>
+      <label><input type="checkbox" id="showRects" checked> Rectangular Decomp / Donut</label><br/>
+      <label><input type="checkbox" id="showCircles" checked> Circular Donut</label><br/>
+      <label><input type="checkbox" id="showConcave" checked> Concave Markers (L)</label><br/>
+    </div>
+
+    <div class="section">
+      <strong>Triangles</strong><br/>
+      <button id="triModeBtn">Triangles: Wireframe</button>
+    </div>
+
+    <div class="section">
+      <strong>Snapping</strong><br/>
+      <label>
+        Grid size:
+        <input type="range" id="gridSize" min="5" max="50" step="1" value="25">
+        <span id="gridSizeVal">25</span>px
+      </label>
+      <br/>
+      <label><input type="checkbox" id="snapEnabled" checked> Snap to grid</label>
+    </div>
+
+    <div class="section" id="hint">
+      <p id="hintText"></p>
+    </div>
+
+    <div class="section small">
+      <p><strong>Drawing:</strong></p>
+      <ul>
+        <li>Click and drag to draw a stroke.</li>
+        <li>L-modes & General: draw one loop.</li>
+        <li>Donut modes: draw outer loop, then inner loop (hole).</li>
+      </ul>
+    </div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <script type="module" src="js/app.js"></script>
+
+</body>
+</html>
+
