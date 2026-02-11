@@ -62,7 +62,97 @@ function learnLayout(detectStructuresID, placeStructuresID, minStructreSize, pre
         layouts.push(mapLayout.getLayoutMap());
     }
 
+    // Add augmented layouts to learn adjacent/nested structures
+    layouts.push(...generateAugmentedLayouts());
+
     return layouts;
+}
+
+/**
+ * Generates synthetic layouts that force the WFC model to learn that
+ * all structure types can be adjacent to and nested within each other.
+ */
+function generateAugmentedLayouts() {
+    const types = Object.keys(colortiles).filter(t => colortiles[t].TOP_LEFT); // Only types with full definition
+    const layouts = [];
+    const size = 20;
+
+    // Helper to create a blank map
+    const createMap = () => Array.from({ length: size }, () => Array(size).fill(0));
+
+    // 1. Learn nesting and adjacency between all pairs of structures
+    for (const typeA of types) {
+        for (const typeB of types) {
+            // Case 1: Nested (B inside A)
+            let mapRec = createMap();
+            drawStructure(mapRec, typeA, 2, 2, 16, 16); // Large outer
+            drawStructure(mapRec, typeB, 6, 6, 8, 8);   // Small inner
+            layouts.push(mapRec);
+
+            // Case 2: Adjacent (Side by Side)
+            let mapAdj = createMap();
+            drawStructure(mapAdj, typeA, 2, 2, 8, 16);  // Left
+            drawStructure(mapAdj, typeB, 10, 2, 8, 16); // Right
+            layouts.push(mapAdj);
+
+            // Case 3: Overlapping
+            let mapOver = createMap();
+            drawStructure(mapOver, typeA, 2, 2, 10, 10); // Top-Left
+            drawStructure(mapOver, typeB, 8, 8, 10, 10); // Bottom-Right
+            layouts.push(mapOver);
+        }
+        
+        // Case 4: Structure containing Empty/Void (Hole)
+        let mapHole = createMap();
+        drawStructure(mapHole, typeA, 2, 2, 16, 16);
+        // Clear center to 0
+        for(let y=6; y<14; y++) {
+            for(let x=6; x<14; x++) {
+                mapHole[y][x] = 0;
+            }
+        }
+        layouts.push(mapHole);
+    }
+
+    return layouts;
+}
+
+/**
+ * Draws a structure of a given type onto a 2D map array.
+ */
+function drawStructure(map, type, x, y, w, h) {
+    const tiles = colortiles[type];
+    if (!tiles) return;
+
+    const right = x + w - 1;
+    const bottom = y + h - 1;
+
+    // Corners
+    if (x >= 0 && x < map[0].length && y >= 0 && y < map.length) map[y][x] = tiles.TOP_LEFT[0];
+    if (right >= 0 && right < map[0].length && y >= 0 && y < map.length) map[y][right] = tiles.TOP_RIGHT[0];
+    if (x >= 0 && x < map[0].length && bottom >= 0 && bottom < map.length) map[bottom][x] = tiles.BOTTOM_LEFT[0];
+    if (right >= 0 && right < map[0].length && bottom >= 0 && bottom < map.length) map[bottom][right] = tiles.BOTTOM_RIGHT[0];
+
+    // Borders & Fill
+    for (let i = x + 1; i < right; i++) {
+        for (let j = y + 1; j < bottom; j++) {
+            if (i >= 0 && i < map[0].length && j >= 0 && j < map.length) {
+                map[j][i] = tiles.FILL[0];
+            }
+        }
+        // Top/Bottom Borders
+        if (i >= 0 && i < map[0].length) {
+            if (y >= 0 && y < map.length) map[y][i] = tiles.TOP[0];
+            if (bottom >= 0 && bottom < map.length) map[bottom][i] = tiles.BOTTOM[0];
+        }
+    }
+    for (let j = y + 1; j < bottom; j++) {
+        // Left/Right Borders
+        if (j >= 0 && j < map.length) {
+            if (x >= 0 && x < map[0].length) map[j][x] = tiles.LEFT[0];
+            if (right >= 0 && right < map[0].length) map[j][right] = tiles.RIGHT[0];
+        }
+    }
 }
 
 function placeStructureInLayout(type, boundingBox, model){
