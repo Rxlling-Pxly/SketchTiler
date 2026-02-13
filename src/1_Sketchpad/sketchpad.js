@@ -13,12 +13,19 @@
 import { LineDisplayble, MouseDisplayable } from "./1_Classes/displayables.js";
 import { WorkingLine } from "./1_Classes/line.js";
 import { conf } from "./2_Utils/canvasConfig.js";
-import { normalizeStrokes, inCanvasBounds, showDebugText } from "./2_Utils/canvasUtils.js"
+import { normalizeStrokes, inCanvasBounds, screenToPage, showDebugText } from "./2_Utils/canvasUtils.js"
 import { undo, redo, getSnapshot } from "./2_Utils/canvasHistory.js"
+import TILEMAP from "../4_Phaser/3_Utils/tilemap.js";
+
+const tilesetInfo = TILEMAP["tiny_town"];
+
 
 // Canvas setup
 const sketchCanvas = document.getElementById("sketch-canvas");
+const gridCanvas = document.getElementById("grid-canvas");
 const ctx = sketchCanvas.getContext("2d");
+const gridCtx = gridCanvas.getContext("2d");
+
 
 /** Current in-progress line. */
 let workingLine = new WorkingLine({ 
@@ -44,6 +51,46 @@ let redoStack = []; // Snapshots of canvas state for redo operations
 
 let activeButton; // Active structure type selected via button (e.g. 'house', 'tree').
 
+//the zoom scale and offset
+let scale = 1.0;
+let panX = 0;
+let panY = 0;
+
+// Panning variables
+let isPanning = false;
+let startPanY = 0;
+let startPanX = 0;
+let spacePressed = false;
+
+// Draw the grid with current pan and scale
+export function drawGrid() {
+	gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+	gridCtx.save();
+	gridCtx.translate(panX, panY);
+	gridCtx.scale(scale, scale);
+
+	gridCtx.strokeStyle = "#DBDBDB";
+	gridCtx.lineWidth = 1; // Keep line width constant ? No, let it scale or not? User said "grid not changing with zooming", typically means checking if it stays 1px or scales. 
+	// Usually grid lines should pan and zoom. If we scale the context, they will zoom.
+	// If we want constant thickness we would divide lineWidth by scale. But user probably wants them to move with zoom.
+
+	// Draw grid lines covering the entire map area
+	const mapWidth = (tilesetInfo.WIDTH + 4) * tilesetInfo.TILE_WIDTH;
+	const mapHeight = tilesetInfo.HEIGHT * tilesetInfo.TILE_WIDTH;
+
+	gridCtx.beginPath();
+	for (let x = 0; x <= mapWidth; x += tilesetInfo.TILE_WIDTH) {
+		gridCtx.moveTo(x, 0);
+		gridCtx.lineTo(x, mapHeight);
+	}
+	for (let y = 0; y <= mapHeight; y += tilesetInfo.TILE_WIDTH) {
+		gridCtx.moveTo(0, y);
+		gridCtx.lineTo(mapWidth, y);
+	}
+	gridCtx.stroke();
+	gridCtx.restore();
+}
+
 // Structure buttons setup
 for (const type in conf.structures) {
 	const structure = conf.structures[type];
@@ -64,21 +111,56 @@ document.getElementById("house-button").click();
 const changeDraw = new Event("drawing-changed"); 
 sketchCanvas.addEventListener("drawing-changed", () => {
 	ctx.clearRect(0, 0, sketchCanvas.width, sketchCanvas.height);
+	
+	//adding the scle and pan from the zoom
+	ctx.save();
+	ctx.translate(panX, panY);
+	ctx.scale(scale, scale);
+	
 	for (const d of displayList) 
 		d.display(ctx);
+
+	ctx.restore();
 });
 
 // Custom event for updating the mouse tool position.
 const movedTool = new Event("tool-moved");
 sketchCanvas.addEventListener("tool-moved", () => {
 	ctx.clearRect(0, 0, sketchCanvas.width, sketchCanvas.height);
+
+	ctx.save();
+	ctx.translate(panX, panY);
+	ctx.scale(scale, scale);
+
 	for (const d of displayList) 
 		d.display(ctx);
+
+	ctx.restore();
 	mouseObject.display(ctx);
 });
 
 // Start drawing a new stroke.
 sketchCanvas.addEventListener("mousedown", (ev) => {
+	
+	if (spacePressed) {
+		isPanning = true;
+		startPanX = ev.clientX - panX;
+		startPanY = ev.clientY - panY;
+		sketchCanvas.style.cursor = "grabbing";
+		return;
+	}
+
+	//Page coords
+	const pageCoords = screenToPage(ev.offsetX, ev.offsetY, panX, panY, scale);
+
+	// Bounds check using page coordinates against the map size
+	const mapWidth = (tilesetInfo.WIDTH + 4) * tilesetInfo.TILE_WIDTH;
+	const mapHeight = tilesetInfo.HEIGHT * tilesetInfo.TILE_WIDTH;
+
+	if (pageCoords.x < 0 || pageCoords.x > mapWidth || pageCoords.y < 0 || pageCoords.y > mapHeight) {
+		return; // Click outside map bounds
+	}
+
 	// Update cursor
 	mouseObject = new MouseDisplayable({
 		x: ev.offsetX,
@@ -87,33 +169,43 @@ sketchCanvas.addEventListener("mousedown", (ev) => {
 		active: true,
 	}, conf.lineThickness);
 
-	// Start a stroke
-	if (inCanvasBounds(mouseObject.mouse, sketchCanvas)){ 
-		// save current canvas state before adding a stroke
-		undoStack.push(getSnapshot());
+	undoStack.push(getSnapshot());
 
-		// update new workingLine with mouseObject settings
-		workingLine = {
-			points: [mouseObject.mouse],
-			thickness: conf.lineThickness,
-			hue: mouseObject.mouse.hue,
-			structure: activeButton,
-		};
+	workingLine = {
+		points: [pageCoords],
+		thickness: conf.lineThickness,
+		hue: mouseObject.mouse.hue,
+		structure: activeButton,
+	};
 
-		// add working line to displayList
-		displayList.push(new LineDisplayble(workingLine)); 
+	// add working line to displayList
+	displayList.push(new LineDisplayble(workingLine)); 
 
-		// clear redo history
-		redoDisplayList = [];
+	// clear redo history
+	redoDisplayList = [];
 
-		// redraw canvas with new stroke + cursor position
-		sketchCanvas.dispatchEvent(changeDraw);
-		sketchCanvas.dispatchEvent(movedTool);
-	}
+	// redraw canvas with new stroke + cursor position
+	sketchCanvas.dispatchEvent(changeDraw);
+	sketchCanvas.dispatchEvent(movedTool);
 });
 
 // Continue drawing stroke as mouse moves.
 sketchCanvas.addEventListener("mousemove", (ev) => {
+	if (isPanning) {
+		panX = ev.clientX - startPanX;
+		panY = ev.clientY - startPanY;
+		sketchCanvas.dispatchEvent(movedTool); // Triggers redraw of both
+		drawGrid(); // Make sure grid moves
+		return;
+	}
+	
+	const pageCoords = screenToPage(ev.offsetX, ev.offsetY, panX, panY, scale);
+	// Bounds check for move
+	const mapWidth = (tilesetInfo.WIDTH + 4) * tilesetInfo.TILE_WIDTH;
+	const mapHeight = tilesetInfo.HEIGHT * tilesetInfo.TILE_WIDTH;
+	const outsideBounds = pageCoords.x < 0 || pageCoords.x > mapWidth || pageCoords.y < 0 || pageCoords.y > mapHeight;
+
+
 	// Update cursor
 	mouseObject = new MouseDisplayable({
 		x: ev.offsetX,
@@ -123,12 +215,12 @@ sketchCanvas.addEventListener("mousemove", (ev) => {
 	}, conf.lineThickness);
 
 	// Draw a stroke (if cursor is active)
-	if (mouseObject.mouse.active) {
-		if (inCanvasBounds({ x: mouseObject.mouse.x, y: mouseObject.mouse.y }, sketchCanvas)){ 
+	if (mouseObject.mouse.active && !outsideBounds) {
+		if ({x: ev.offsetX, y:ev.offsetY}, sketchCanvas){ 
 			// add new point to working line
 			workingLine.points.push({
-				x: mouseObject.mouse.x,
-				y: mouseObject.mouse.y,
+				x: pageCoords.x,
+				y: pageCoords.y,
 			});
 
 			// add stroke to canvas
@@ -145,6 +237,12 @@ sketchCanvas.addEventListener("mousemove", (ev) => {
 
 // Finish drawing stroke and optionally normalize.
 sketchCanvas.addEventListener("mouseup", (ev) => {
+	if (isPanning) {
+		isPanning = false;
+		sketchCanvas.style.cursor = spacePressed ? "grab" : "auto";
+		return;
+	}
+	
 	// Update cursor
 	mouseObject = new MouseDisplayable({
 		x: ev.offsetX,
@@ -154,12 +252,13 @@ sketchCanvas.addEventListener("mouseup", (ev) => {
 	}, conf.lineThickness);
 
 	// Finish stroke (if it is long enough)
-	if(workingLine.points.length <= conf.sizeThreshold){
+	if (workingLine && workingLine.points && workingLine.points.length <= conf.sizeThreshold) {
 		displayList.pop();  // remove accidental tiny stroke
 		undoStack.pop();	// also forget this canvas state
 	} else {
 		// normalize strokes (if normalize toggle is checked)
-		normalizing = document.getElementById("normalize-toggle").checked;
+		let normalizeButton = document.getElementById("normalize-button")
+		let normalizing = normalizeButton.classList.contains("active");
 		if (normalizing) normalizeStrokes(displayList, sketchCanvas);
 
 		// clear redo history
@@ -168,6 +267,21 @@ sketchCanvas.addEventListener("mouseup", (ev) => {
 		// redraw sketch canvas with new stroke + cursor position
 		sketchCanvas.dispatchEvent(changeDraw);
 		sketchCanvas.dispatchEvent(movedTool);
+	}
+});
+
+window.addEventListener("keydown", (e) => {
+	if (e.code === "Space" && !e.repeat) {
+		spacePressed = true;
+		sketchCanvas.style.cursor = "grab";
+	}
+});
+
+window.addEventListener("keyup", (e) => {
+	if (e.code === "Space") {
+		spacePressed = false;
+		isPanning = false;
+		sketchCanvas.style.cursor = "auto";
 	}
 });
 
@@ -182,6 +296,7 @@ sketchCanvas.addEventListener("mouseleave", (e) => {
 
 	// redraw sketch canvas to capture new cursor position
 	sketchCanvas.dispatchEvent(movedTool);
+	drawGrid();
 });
 
 // Receives a region and checks whether there are already display lines there (?)
@@ -244,6 +359,48 @@ window.addEventListener("mapToSketch", (e) => {
 	exportButton.disabled = false;
 })
 
+//zoom event listener
+const zoomAmountDisplay = document.getElementById(`zoom-indicator`);
+sketchCanvas.addEventListener("wheel", (ev) => {
+	ev.preventDefault();
+
+	const zoomSpeed = 0.1;
+	const oldScale = scale;
+
+	//calcualtes the new scale
+	if (ev.deltaY < 0) {
+		scale += zoomSpeed;
+	} else {
+		scale = Math.max(0.1, scale - zoomSpeed);//so the scale can't go under 0
+	}
+
+	// update what the zoom percentage display looks like based on current scale
+	zoomAmountDisplay.textContent = Math.round(scale * 100);
+
+	//geting the mouse position in relation to the canvas
+	const mouseX = ev.offsetX;
+	const mouseY = ev.offsetY;
+
+	//adjust the pointer to be with the mouse
+	panX = mouseX - (mouseX - panX) * (scale / oldScale);
+	panY = mouseY - (mouseY - panY) * (scale / oldScale);
+
+	sketchCanvas.dispatchEvent(movedTool);
+});
+
+// Resets zoom and pan
+const zoomResetButton = document.getElementById(`zoom-reset-button`);
+zoomResetButton.onclick = () => {
+	scale = 1.0;
+	panX = 0;
+	panY = 0;
+
+	zoomAmountDisplay.textContent = 100;
+
+	drawGrid();
+}
+
+
 // Clears canvas and structure display list.
 const clearButton = document.getElementById(`clear-button`);
 clearButton.onclick = () => {
@@ -281,13 +438,13 @@ generateButton.onclick = () => {
 }
 
 // Normalize strokes (straighten lines, find shapes, etc)
-const normalizeToggle = document.getElementById("normalize-toggle");
-let normalizing = normalizeToggle.checked;
+const normalizeToggle = document.getElementById("normalize-button");
 normalizeToggle.onclick = () => {
 	// update normalizing tracker bool to reflect toggle value
-	normalizing = document.getElementById("normalize-toggle").checked;
-	if (normalizing){ 
-		normalizeStrokes(displayList, sketchCanvas); 
+	//normalizing = document.getElementById("normalize-toggle").checked;
+	let normalizing = normalizeToggle.classList.toggle("active")
+	if (normalizing) {
+		normalizeStrokes(displayList, sketchCanvas);
 		sketchCanvas.dispatchEvent(changeDraw); // Re-render the canvas after simplifying
 	}
 }

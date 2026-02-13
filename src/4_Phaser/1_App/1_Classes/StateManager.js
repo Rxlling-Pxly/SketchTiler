@@ -12,7 +12,7 @@ export default class StateManager {
     // region tracking
     this.userRegions = {}
     this.lockedRegions = { house: [], path: [], fence: [], forest: [] }
-    // this.lockedUserRegion = {}
+    this.lockedUserRegion = {}
     
     // tile arrays
     this.lockedTiles = this.createEmptyTileArray()
@@ -25,6 +25,6 @@ export default class StateManager {
   
   resetLockedTiles() {
     this.lockedTiles = this.createEmptyTileArray()
-    // this.lockedUserRegion = {}
+    this.lockedUserRegion = {}
   }
 }

@@ -17,9 +17,10 @@ export default class RegionManager {
     if (!this.state.layout) return
     
     // convert pixel coord to tiles
-    const tx = Math.floor(e.layerX / this.tileSize)
-    const ty = Math.floor(e.layerY / this.tileSize)
+    const tx = Math.floor(e.worldX / this.tileSize)
+    const ty = Math.floor(e.worldY / this.tileSize)
     
+
     if (this.state.layout.layoutMap[ty][tx] <= 0) return // ignore empty regions
 
     // check if clicking a region (structure)
@@ -74,10 +75,11 @@ export default class RegionManager {
           const struct = this.getRegionFromMap(box, tilemap)
           this.copyRegionTiles(box, struct, result)
           
-          // if (!state.lockedUserRegion[type]) {
-          //   state.lockedUserRegion[type] = []
-          // }
-          // state.lockedUserRegion[type].push(box)
+          // COMMENTED
+          if (!state.lockedUserRegion[type]) {
+             state.lockedUserRegion[type] = []
+          }
+           state.lockedUserRegion[type].push(box)
         }
       }
     }

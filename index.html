@@ -4,134 +4,107 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SketchTiler</title>
-    <link rel="stylesheet" href="./src/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
-    <!-- using JSZip for exports -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link rel="stylesheet" href="src/style.css">
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css"> -->
   </head>
   <body>
     <div id="page">
 
       <!-- SKETCHTILER APP -->
       <div id="app">
-        <!-- SKETCHPAD -->
-        <div id="sketchpad">
-          <canvas id="grid-canvas"></canvas>
-          <canvas id="sketch-canvas"></canvas>
-        </div>
-        <!-- sketchpad buttons -->
-        <div id="drawing-buttons">
-          <button id="house-button" class="button is-danger sketch-button">House</button>
-          <button id="forest-button" class="button is-success sketch-button">Forest</button>
-          <button id="fence-button" class="button is-info sketch-button">Fence</button>
-          <span id="normalize">
-            <input id="normalize-toggle"
-              type="checkbox" 
-              class="onoffswitch-checkbox"  
-              checked="true"
-            />
-            Normalize
-          </span>
-          <button id="undo-button" class="button is-light sketch-button">Undo</button>
-          <button id="redo-button" class="button is-light sketch-button">Redo</button>
-          <button id="generate-button" class="button is-primary is-rounded sketch-button">Gen</button>
-          <button id="clear-button" class="button is-light sketch-button">Clear</button>
-        </div>
 
-        <!-- PHASER -->
-        <div style="display:flex; overflow:hidden; gap: 1em;">
-          <div id="phaser"></div>
-          <div id="pattern-panel"></div>
-        </div>
+        <!-- SKETCHPAD WITH BUTTONS-->
+        <div id="full-sketchpad">
 
-        <!-- DEMOS -->
-        <!-- WFC demo -->
-        <div id="wfc-demo">
-          <h2 class="title is-4">Controls</h2>
-          <div class="buttons mt-3">
-            <button id="generateBtn" class="button is-primary">Generate</button>
-            <button id="clearBtn" class="button is-warning">Clear</button>
-            <span id="demo-overlay">
-              <input id="demo-overlay-toggle"
-                type="checkbox" 
-                class="onoffswitch-checkbox"  
-                disabled
-              />
-              Toggle overlay
-            </span>
-            <span id="demo-overlay2">
-              <input id="demo-overlay2-toggle"
-                type="checkbox" 
-                class="onoffswitch-checkbox"  
-              />
-               Toggle overlay 2
-            </span>
-          </div>
-          
-          <div class="field">
-            <h3 class="title is-5">Get Average Duration</h3>
-            <label class="label">Number of Runs</label>
-            <div class="control">
-              <input id="numRunsInput" class="input" type="number" min="1" value="100">
+          <!-- sketchpad buttons -->
+          <div id="buttons">
+
+            <!-- STRUCTURE BUTTONS -->
+            <div id="structure_buttons">
+              <button id="house-button" class="house_button">House</button>
+              <button id="forest-button" class="forest_button">Forest</button>
+              <button id="fence-button" class="fence_button">Fence</button>
+              <button id="path-button" class="path_button">Path</button>
             </div>
-            <button id="averageBtn" class="button is-info">Generate</button>
+
+            <!-- different spacing for smaller buttons -->
+            <div id="smaller_buttons">
+              <button id="undo-button" class="undo_button">↺</button>
+              <button id="redo-button" class="undo_button">↻</button>
+              <button id="zoom-reset-button" class="undo_button">⛶</button>
+            </div>
+
+            <!-- Normalize and Clear Buttons-->
+            <div id="vertical_settings">
+                <button id="normalize-button" class="long_button">Normalize</button> 
+                <button id="clear-button" class="long_button">Clear</button> 
+            </div>
           </div>
 
-          <div id="progressWrapper" >
-            <progress id="progressBar" class="progress is-info" value="0" max="100">0%</progress>
+          <!-- Zoom indicator -->
+           <span id="zoom-indicator" class="zoom-indicator">100</span>
+
+          <!-- SKETCHPAD -->
+          <div id="sketchpad">
+            <canvas id="grid-canvas"></canvas>
+            <canvas id="sketch-canvas"></canvas>
           </div>
 
-          <div id="thinking-icon" class="spinner" style="display: none;"></div>
+          <!-- OTHER SKETCHPAD INFORMATION -->
+          <!-- WFC demo -->
+          <div id="wfc-demo"></div>
 
-          <div id="profileMessage"></div>
+          <!-- GENERATE & EXTRA SETTINGS -->
+          <div id="bottom_buttons">
+            <button id="generate-button" class="generate_button">Generate</button>
+          </div>
         </div>
 
-        <div id="data">
-          <!-- STRUCTURE LOCKING -->
-          <span id="structure_lock">
-            <input id="structure-lock"
-              type="checkbox" 
-              class="onoffswitch-checkbox"  
-              checked="true"
-            />
-            Lock structures
-          </span>
+        <!-- Full output screen -->
+        <div id="output-panel">
 
-          <span id="overlay">
-              <input id="overlay-toggle"
-                type="checkbox" 
-                class="onoffswitch-checkbox"  
-                checked="false"
-              />
-              Show regions
-          </span>
+          <!-- Place holder for buttons -->
+          <div id="output-buttons">
 
-          <!-- dev mode-->
-          <button id="update-input-button" class="button is-dark">[DEV] Update input</button>
-
-          <!-- EXPORTS -->
-          <div id="export-buttons">
-            <button id="export-map-button" class="button is-dark" disabled="true">Export map</button>
-            <button id="export-sketch-button" class="button is-dark" disabled="true">Export sketch</button>
+            <!-- output tool buttons -->
+            <div id="smaller_buttons">
+              <button id="lasso-button" class="select_button">Select</button>
+              <button id="lock-structures-button" class="select_button">Lock</button>
+            </div>
           </div>
+
+          <!-- PHASER-->
+          
+          <div style="display:flex; overflow:hidden; gap: 0;">
+            <div id="phaser"></div>
+            <div id="pattern-panel"></div>
+          </div>
+
+          <!-- DATA FOR OUTPUT -->
+            <div id="data">
+              <button id="overlay-toggle" class="export_button">Overlay Toggle</button>
+              <button id="export-map-button" class="export_button">Export map</button>
+              <button id="export-sketch-button" class="export_button">Export sketch</button>
+            </div>
         </div>
       </div>
 
-      <!-- SKETCHTILER INSTRUCTIONS  
-      <div id="instructions" class="content">
-        <h2 class="title is-2">SketchTiler</h2>
+      <div id="bottom-row">
+          <!-- Puttin 2 WFC demos just for placeholder-->
+          <!-- Replce with layers and structures menu-->
+          <div style="display:flex; overflow:hidden; gap: 1em;">
+            <div id="phaser"></div>
+            <div id="pattern-panel"></div>
+          </div>
 
-        <h3 class="subtitle is-4">Instructions</h3>
-        <ul>
-          <li>left-click a generated structure in the tilemap window (bottom) to lock it</li>
-          <li>ctrl-click a generated structure in the tilemap window regenerate it</li>
-          <li>NOTE: this is an ongoing project, and there will be bugs! No overlapping region support.</li>
-        </ul>
+          <!-- Eventually replace this with LLM chatbot-->
+          <div style="display:flex; overflow:hidden; gap: 1em;">
+            <div id="phaser"></div>
+            <div id="pattern-panel"></div>
+          </div>
       </div>
-      -->
     </div>
 
-    <script type="module" src="./src/main.js"></script>
+    <script type="module" src="/SketchTiler-main/src/main.js"></script>
   </body>
 </html>

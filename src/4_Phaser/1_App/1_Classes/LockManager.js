@@ -54,6 +54,15 @@ export default class LockManager {
     
     // erase struct on sketch canvas
     if (dispatch) { this.dispatchSketchEvent('phaserErase', type, box) }
+
+    this.state.lockedTiles = this.regions.lockRegions(
+      this.state.wfcResult,
+      this.state.lockedRegions,
+      this.state
+    )
+    //this.display.displayMap('locked', this.state.lockedTiles, 'tilemap', 1, 1)
+
+
   }
 
   unlockAll() {

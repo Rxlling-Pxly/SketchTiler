@@ -51,7 +51,7 @@ export default class Autotiler extends Phaser.Scene {
     this.tileSize = tilesetInfo.TILE_WIDTH
 
     // init toggle state
-    // this.lockingAll = document.getElementById("structure-lock").checked || false
+     //this.lockingAll = document.getElementById("structure-lock").checked || false
   }
   
   // makes new manager objects (from classes above)
@@ -104,31 +104,34 @@ export default class Autotiler extends Phaser.Scene {
     const overlayToggle = document.getElementById('overlay-toggle')
     if (overlayToggle) {
       overlayToggle.onclick = () => {
-        this.displayManager.setLayoutVisibility(overlayToggle.checked === "true")
+        this.displayManager.setLayoutVisibility(overlayToggle.checked)
       }
     }
     
     // STRUCT LOCK TOGGLE
-    // const lockToggle = document.getElementById("structure-lock")
-    // if (lockToggle) {
-      // lockToggle.onclick = () => {
-        // this.lockingAll = lockToggle.checked
-      // }
-    // }
+    const lockToggle = document.getElementById("structure-lock")
+    if (lockToggle) {
+      lockToggle.onclick = () => {
+        this.lockingAll = lockToggle.checked
+     }
+    }
     
     // CANVAS CLICKS
     let ctrl = false;
-    this.input.keyboard.on('keydown', function (e) {
-      ctrl = (e.key === "Control")
-    })
-    this.input.keyboard.on('keyup', function (e) {
-      if(ctrl && e.key === "Control"){ ctrl = false }
-    })
-    const canvas = document.getElementById("phaser")
-    if (canvas) {
-      canvas.onclick = (e) => this.regionManager.handleClick(e, ctrl)
-      ctrl = false
-    }
+
+    this.input.keyboard.on('keydown', (e) => {
+      if (e.key === "Control") ctrl = true;
+    });
+
+    this.input.keyboard.on('keyup', (e) => {
+      if (e.key === "Control") ctrl = false;
+    });
+
+    const ctrlKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
+
+    this.input.on("pointerdown", (pointer) => {
+      this.regionManager.handleClick(pointer, ctrlKey.isDown);
+    });
   }
   
   // link event listeners to handler functions
@@ -162,7 +165,7 @@ export default class Autotiler extends Phaser.Scene {
       if (this.state.layout) {
         this.displayManager.displayMap('layout', this.state.layout.layoutMap, 'colorTiles', 0.25)
         const overlayToggle = document.getElementById('overlay-toggle')
-        this.displayManager.setLayoutVisibility(overlayToggle.checked === "true" || false)
+        this.displayManager.setLayoutVisibility(overlayToggle.checked || false)
       }
 
       // enable map export
@@ -211,9 +214,9 @@ export default class Autotiler extends Phaser.Scene {
 
         this.lockHandler.unlockStructure(region.type, i, b)
 
-        // this.state.lockedRegions[region.type] = this.state.lockedRegions[region.type].filter(
-          // box => !this.regionManager.regionsMatch(box, region)
-        // )
+        this.state.lockedRegions[region.type] = this.state.lockedRegions[region.type].filter(
+          box => !this.regionManager.regionsMatch(box, region)
+         )
         
         // clean up
         if (this.state.lockedRegions[region.type].length === 0) {
@@ -225,6 +228,7 @@ export default class Autotiler extends Phaser.Scene {
     // now display current/updated regions
     this.displayManager.displayMap('sketch', this.state.lockedTiles, 'tilemap', 1, 1)
     this.displayManager.displayMap('layout', this.state.layout.layoutMap, 'colorTiles')
+
     
     const overlayToggle = document.getElementById('overlay-toggle')
     this.displayManager.setLayoutVisibility(overlayToggle.checked === "true" || false)

@@ -1,26 +1,86 @@
+@import url('https://font.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600&display=swap');
+
 #page {
   display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 #app {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  background-color: #222;
+}
+
+#bottom-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  background-color: #222;
+}
+
+#full-sketchpad {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   position: relative;
 }
 
 #sketchpad {
   position: relative;
+  display: block;
+  width: 500px;
+  height: 400px;
 }
 
-#sketchpad > canvas {
+#sketchpad canvas {
   position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
   cursor: none;
 }
 
+#zoom-indicator {
+  position: absolute;
+  top: 82px;
+  left: 0px;
+  z-index: 10;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 20px;
+  pointer-events: none;
+}
+
+/* Defaults are 500px x 400px */
 #pattern-panel {
   width: 500px;
   height: 400px;
   overflow-y: auto;
   background: #222;
   padding: 10px;
+}
+
+#output-panel {
+  margin-top: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: flex-start;
+}
+
+#phaser canvas {
+  display: block;
+  margin: 0;
+  padding: 0;
 }
 
 /* index.css */
@@ -52,25 +112,293 @@
   float: right;
 }
 
+#buttons {
+  background-color: #333;
+  padding: 1rem;
+  display: flex;
+  gap: 20px;
+}
+
+#bottom_buttons {
+  width: 95.5%;
+  background-color: #333;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+#output-buttons {
+  background-color: #333;
+  padding: 1rem;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+#data {
+  background-color: #333;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+
+#structure_buttons {
+  display: flex;
+  gap: 7px;
+}
+
+#smaller_buttons {
+  display: flex;
+  gap: 7px;
+}
+
 #profileMessage {
   white-space: pre-line;
 }
 
-#drawing-buttons {
-  position: absolute;
-  top: 0;
-  right: -110px;
-  padding-right: 8px;
-  padding-left: 8px;
-  padding-top: 14px;
-  padding-bottom: 14px;
+#vertical_settings {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  text-align: center;
-  background-color: #CCDEDD;
 }
 
-#generate-button {
+.long_button {
+  width: 115px;
+  height: 20px;
+  font-size: 12px;
+  border-width: medium;
+  border-style: solid;
+  border-color: white;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
+  color: white;
+  background-color: #222;
+  transition: transform 0.3s ease;
+  outline: none;
+  box-shadow: none;  
+}
 
+.house_button {
+  width: 83px;
+  height: 50px;
+  font-size: 20px;
+  border-width: medium;
+  border-style: solid;
+  border-color: blue;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
+  color: white;
+  background-color: #222;
+  transition: transform 0.3s ease;
+  outline: none;
+  box-shadow: none;
+}
+
+.forest_button {
+  width: 83px;
+  height: 50px;
+  font-size: 20px;
+  border-width: medium;
+  border-style: solid;
+  border-color: #59B383;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
+  color: white;
+  background-color: #222;
+  transition: transform 0.3s ease;
+  outline: none;
+  box-shadow: none;
+}
+
+.path_button {
+  width: 83px;
+  height: 50px;
+  font-size: 20px;
+  border-width: medium;
+  border-style: solid;
+  border-color: #B38559;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
+  color: white;
+  background-color: #222;
+  transition: transform 0.3s ease;
+  outline: none;
+  box-shadow: none;
+}
+
+.fence_button {
+  width: 83px;
+  height: 50px;
+  font-size: 20px;
+  border-width: medium;
+  border-style: solid;
+  border-color: #7484A6;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
+  color: white;
+  background-color: #222;
+  transition: transform 0.3s ease;
+  outline: none;
+  box-shadow: none;
+}
+
+.undo_button {
+  width: 50px;
+  height: 50px;
+  font-size: 20px;
+  border-width: medium;
+  border-style: solid;
+  border-color: white;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
+  color: white;
+  background-color: #222;
+  transition: transform 0.3s ease;
+  outline: none;
+  box-shadow: none;
+}
+
+.select_button {
+  width: 83px;
+  height: 50px;
+  font-size: 20px;
+  border-width: medium;
+  border-style: solid;
+  border-color: white;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
+  color: white;
+  background-color: #222;
+  transition: transform 0.3s ease;
+  outline: none;
+  box-shadow: none;
+}
+
+.forest_button {
+  width: 83px;
+  height: 50px;
+  font-size: 20px;
+  border-width: medium;
+  border-style: solid;
+  border-color: #59B383;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
+  color: white;
+  background-color: #222;
+  transition: transform 0.3s ease;
+  outline: none;
+  box-shadow: none;
+}
+
+.generate_button {
+  width: 170px;
+  height: 50px;
+  font-size: 20px;
+  border-width: medium;
+  border-style: solid;
+  border-color: #59B383;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
+  color: white;
+  background-color: #222;
+  transition: transform 0.3s ease;
+  outline: none;
+  box-shadow: none;
+}
+
+.export_button {
+  width: 170px;
+  height: 50px;
+  font-size: 20px;
+  border-width: medium;
+  border-style: solid;
+  border-color: white;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
+  color: white;
+  background-color: #222;
+  transition: transform 0.3s ease;
+  outline: none;
+  box-shadow: none;
+}
+
+.house_button:hover {
+  transform: translateY(-5px);
+  color: #DA6969;
+}
+
+.house_button.active {
+  background-color: #DA6969;
+  color: #333;
+}
+
+.forest_button:hover {
+  transform: translateY(-5px);
+  color: #59B383;
+}
+
+.forest_button.active {
+  background-color: #59B383;
+  color: #333;
+}
+
+.path_button:hover {
+  transform: translateY(-5px);
+  color: #B38559;
+}
+
+.path_button.active {
+  background-color: #B38559;
+  color: #333;
+}
+
+.fence_button:hover {
+  transform: translateY(-5px);
+  color: #7484A6;
+}
+
+.fence_button.active {
+  background-color: #3273dc;
+  color: #333;
+}
+
+.undo_button:hover {
+  transform: translateY(-5px);
+}
+
+.long_button:hover {
+  transform: translateY(-5px);
+  background-color: white;
+  color: #333;
+}
+
+.long_button.active {
+  background-color: white;
+  color: #333;
+}
+
+.generate_button:hover {
+  transform: translateY(-5px);
+  background-color: #59B383;
+  color: #333;
+}
+
+.export_button:hover {
+  transform: translateY(-5px);
+  background-color: white;
+  color: #333;
+}
+
+.select_button:hover {
+  transform: translateY(-5px);
+  background-color: white;
+  color: #333;
+}
+
+.export_button:active {
+  background-color: white;
+  color: #333;
 }
