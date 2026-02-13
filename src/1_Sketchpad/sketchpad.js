@@ -60,7 +60,6 @@ let panY = 0;
 let isPanning = false;
 let startPanY = 0;
 let startPanX = 0;
-let spacePressed = false;
 
 // Draw the grid with current pan and scale
 export function drawGrid() {
@@ -107,6 +106,10 @@ for (const type in conf.structures) {
 // Default to 'house' for initial selected marker
 document.getElementById("house-button").click(); 
 
+// Prevent context menu from appearing on right click
+sketchCanvas.addEventListener("contextmenu", (e) => e.preventDefault());
+
+
 // Custom event for repainting the canvas after changes.
 const changeDraw = new Event("drawing-changed"); 
 sketchCanvas.addEventListener("drawing-changed", () => {
@@ -142,11 +145,19 @@ sketchCanvas.addEventListener("tool-moved", () => {
 // Start drawing a new stroke.
 sketchCanvas.addEventListener("mousedown", (ev) => {
 	
-	if (spacePressed) {
+	if (ev.button == 2) {
 		isPanning = true;
 		startPanX = ev.clientX - panX;
 		startPanY = ev.clientY - panY;
 		sketchCanvas.style.cursor = "grabbing";
+
+		mouseObject = new MouseDisplayable({
+			x: -1,
+			y: -1,
+			hue: mouseObject.mouse.hue,
+			active: false,
+		}, 0);
+
 		return;
 	}
 
@@ -239,7 +250,7 @@ sketchCanvas.addEventListener("mousemove", (ev) => {
 sketchCanvas.addEventListener("mouseup", (ev) => {
 	if (isPanning) {
 		isPanning = false;
-		sketchCanvas.style.cursor = spacePressed ? "grab" : "auto";
+		sketchCanvas.style.cursor = "none";
 		return;
 	}
 	
@@ -267,21 +278,6 @@ sketchCanvas.addEventListener("mouseup", (ev) => {
 		// redraw sketch canvas with new stroke + cursor position
 		sketchCanvas.dispatchEvent(changeDraw);
 		sketchCanvas.dispatchEvent(movedTool);
-	}
-});
-
-window.addEventListener("keydown", (e) => {
-	if (e.code === "Space" && !e.repeat) {
-		spacePressed = true;
-		sketchCanvas.style.cursor = "grab";
-	}
-});
-
-window.addEventListener("keyup", (e) => {
-	if (e.code === "Space") {
-		spacePressed = false;
-		isPanning = false;
-		sketchCanvas.style.cursor = "auto";
 	}
 });
 
