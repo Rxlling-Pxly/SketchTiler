@@ -119,6 +119,11 @@
   gap: 20px;
 }
 
+#place-holder {
+  background-color: #333;
+  height: 50px;
+}
+
 #bottom_buttons {
   width: 95.5%;
   background-color: #333;
@@ -398,7 +403,7 @@
   color: #333;
 }
 
-.export_button:active {
+.export_button.active {
   background-color: white;
   color: #333;
 }

@@ -60,7 +60,7 @@ export default class LockManager {
       this.state.lockedRegions,
       this.state
     )
-    //this.display.displayMap('locked', this.state.lockedTiles, 'tilemap', 1, 1)
+    this.display.displayMap('locked', this.state.lockedTiles, 'tilemap', 1, 1)
 
 
   }

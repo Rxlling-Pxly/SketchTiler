@@ -566,6 +566,7 @@ export function setDisplayList(data, key) {
 }
 
 // EXPORTS
+/*
 const exportButton = document.getElementById("export-sketch-button");
 exportButton.disabled = true;
 
@@ -594,3 +595,4 @@ export async function exportSketch(zip){
 	
 	exportButton.disabled = true;
 }
+*/

@@ -7,7 +7,7 @@ import generateForest from "../../3_Generators/generateForest.js";
 import generateFence from "../../3_Generators/generateFence.js";
 import generatePaths from "../../3_Generators/generatePaths.js";
 import { Regions } from "../../1_Sketchpad/1_Classes/regions.js";
-import { exportSketch } from "../../1_Sketchpad/sketchpad.js";
+//import { exportSketch } from "../../1_Sketchpad/sketchpad.js";
 import generateLayout from "../../3_Generators/generateLayout.js";
 
 // import managers
@@ -94,19 +94,20 @@ export default class Autotiler extends Phaser.Scene {
   
   setupUIControls() {
     // EXPORT
+    /*
     const exportBtn = document.getElementById("export-map-button")
     if (exportBtn) {
       exportBtn.addEventListener("click", () => this.export("map"))
       exportBtn.disabled = true
-    }
+    }\*/
     
     // OVERLAY TOGGLE
-    const overlayToggle = document.getElementById('overlay-toggle')
-    if (overlayToggle) {
-      overlayToggle.onclick = () => {
-        this.displayManager.setLayoutVisibility(overlayToggle.checked)
-      }
-    }
+    const overlayToggle = document.getElementById('overlay-toggle');
+
+    overlayToggle.addEventListener("click", () => {
+      const showingOverlay = overlayToggle.classList.toggle("active");
+      this.displayManager.setLayoutVisibility(showingOverlay);
+    });
     
     // STRUCT LOCK TOGGLE
     const lockToggle = document.getElementById("structure-lock")
@@ -160,13 +161,16 @@ export default class Autotiler extends Phaser.Scene {
       this.displayManager.displayMap('structs', this.state.wfcResult, 'tilemap')
       this.displayManager.displayMap('sketch', this.state.userTiles, 'tilemap', 1, 1)
       this.displayManager.displayMap('locked', this.state.lockedTiles, 'tilemap', 1, 1)
-      
+
+      const overlayToggle = document.getElementById('overlay-toggle');
+      const showingOverlay = overlayToggle.classList.contains("active");
+
       // display layout if it exists and toggle is checked
       if (this.state.layout) {
         this.displayManager.displayMap('layout', this.state.layout.layoutMap, 'colorTiles', 0.25)
-        const overlayToggle = document.getElementById('overlay-toggle')
-        this.displayManager.setLayoutVisibility(overlayToggle.checked || false)
+        this.displayManager.setLayoutVisibility(showingOverlay);
       }
+
 
       // enable map export
       const exportBtn = document.getElementById("export-map-button")
@@ -190,8 +194,10 @@ export default class Autotiler extends Phaser.Scene {
     this.lockHandler.unlockAll()
 
     // disable map export
+    /*
     const exportBtn = document.getElementById("export-map-button")
     exportBtn.disabled = true
+    */
   }
   
   // undo button clicked
