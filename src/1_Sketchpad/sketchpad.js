@@ -386,6 +386,7 @@ sketchCanvas.addEventListener("wheel", (ev) => {
 	panY = mouseY - (mouseY - panY) * (scale / oldScale);
 
 	sketchCanvas.dispatchEvent(movedTool);
+	drawGrid();
 });
 
 // Resets zoom and pan
