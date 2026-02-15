@@ -14,24 +14,38 @@ const tilesetInfo = TILEMAP["tiny_town"];
 export default function generateLayout(regions, detectStructuresID, placeStructuresID, minStructreSize, preventOverlaps = false) {
     const layouts = learnLayout(detectStructuresID, placeStructuresID, minStructreSize, preventOverlaps);
     const model = new WFCModel().learn(layouts, 2);
-    
-    for(let type in regions){
-        for(let box of regions[type]){
-            placeStructureInLayout(type.toLowerCase(), box, model);
+
+    for (let type in regions) {
+        for (let box of regions[type]) {
+            if (Array.isArray(box)) {
+                // trace
+                for (let point of box) {
+                    model.setTile(point.x, point.y, colortiles[type.toLowerCase()].FILL);
+                }
+            } else {
+                // box
+                placeStructureInLayout(type.toLowerCase(), box, model);
+            }
         }
     }
-    
-    // generate layout
-    const map = model.generate(tilesetInfo.WIDTH, tilesetInfo.HEIGHT, 10, false, false);
 
-    if (!map){ 
+    // generate layout
+    let map;
+    try {
+        map = model.generate(tilesetInfo.WIDTH, tilesetInfo.HEIGHT, 10, false, false);
+    } catch (error) {
+        console.warn("Layout generation failed with error:", error);
+        return false;
+    }
+
+    if (!map) {
         console.error("Contradiction created");
         return false;
     }
 
     const layout = new Layout(
         map,
-        minStructreSize, 
+        minStructreSize,
         STRUCTURE_TILES[placeStructuresID],
         STRUCTURE_TILES[placeStructuresID],
         minStructreSize,
@@ -46,14 +60,14 @@ export default function generateLayout(regions, detectStructuresID, placeStructu
  * 
  * @param {string} detectStructuresID - Key for STRUCTURE_TILES to use.
  */
-function learnLayout(detectStructuresID, placeStructuresID, minStructreSize, preventOverlaps){
+function learnLayout(detectStructuresID, placeStructuresID, minStructreSize, preventOverlaps) {
     let layouts = []
 
     // create layouts from structure maps
-    for(let structureMap of IMAGES.STRUCTURES){
+    for (let structureMap of IMAGES.STRUCTURES) {
         const mapLayout = new Layout(
             structureMap,
-            minStructreSize, 
+            minStructreSize,
             STRUCTURE_TILES[detectStructuresID],
             STRUCTURE_TILES[placeStructuresID],
             preventOverlaps
@@ -65,7 +79,7 @@ function learnLayout(detectStructuresID, placeStructuresID, minStructreSize, pre
     return layouts;
 }
 
-function placeStructureInLayout(type, boundingBox, model){
+function placeStructureInLayout(type, boundingBox, model) {
     const tlX = boundingBox.topLeft.x;
     const tlY = boundingBox.topLeft.y;
     const brX = boundingBox.bottomRight.x;

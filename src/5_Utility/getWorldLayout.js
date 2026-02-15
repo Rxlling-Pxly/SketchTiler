@@ -8,11 +8,11 @@ const DIRECTIONS = [
     { x: 1, y: 0 }   // right
 ];
 
-export default class Layout{
-    constructor(mapData, minStructureSize, detectStructureTypes, placeStructureTypes, preventOverlaps = false){
+export default class Layout {
+    constructor(mapData, minStructureSize, detectStructureTypes, placeStructureTypes, preventOverlaps = false) {
         // input 
         this.mapData = mapData;
-        if(this.mapData.layers){
+        if (this.mapData.layers) {
             this.mapData = this.createSingleLayerMap(this.mapData.layers);
         }
         this.minStructureSize = minStructureSize;
@@ -26,29 +26,29 @@ export default class Layout{
         this.findStructures(this.detectStructureTypes);
 
         // adjust disallowed overlaps
-        if(preventOverlaps)(this.overlapHandler());
+        if (preventOverlaps) (this.overlapHandler());
 
         // Populate layout data
         this.initLayout();
         this.findVoids();
     }
 
-    findStructures(detect){
+    findStructures(detect) {
         console.log(detect)
         // find all structures
         for (const structureType in detect) {
             let structureConfig = detect[structureType];
 
             let s = this.getStructures(structureConfig);
-            
-            for(let positionArray of s){
+
+            for (let positionArray of s) {
                 let structureFacts = this.getStructureFacts(structureType, positionArray);
                 this.worldFacts.push(structureFacts);
             }
         }
     }
 
-    initLayout(){
+    initLayout() {
         for (let structure of this.worldFacts) {
             if (structure.trace) {
                 for (let { x, y } of structure.trace) {
@@ -60,24 +60,24 @@ export default class Layout{
 
                 let w = startX + structure.boundingBox.width;
                 let h = startY + structure.boundingBox.height;
-                
-                for(let x = startX; x < w; x++){
-                    for(let y = startY; y < h; y++){
+
+                for (let x = startX; x < w; x++) {
+                    for (let y = startY; y < h; y++) {
                         let corner = this.getCorner(x, y, structure.boundingBox);
                         let border = this.getBorder(x, y, structure.boundingBox);
 
-                        if(!corner && !border) { 
+                        if (!corner && !border) {
                             // color fill tiles
                             this.layoutMap[y][x] = structure.color;
-                            
+
                         } else {
                             // color border and corner tiles
-                            if(border){    
-                                this.layoutMap[y][x] = (this.placeStructureTypes[structure.type].borders) ? 
+                            if (border) {
+                                this.layoutMap[y][x] = (this.placeStructureTypes[structure.type].borders) ?
                                     this.placeStructureTypes[structure.type].borders[border][0] : structure.color;
                             }
-                            if(corner) {  
-                                this.layoutMap[y][x] = (this.placeStructureTypes[structure.type].corners) ? 
+                            if (corner) {
+                                this.layoutMap[y][x] = (this.placeStructureTypes[structure.type].corners) ?
                                     this.placeStructureTypes[structure.type].corners[corner][0] : structure.color;
                             }
                         }
@@ -87,7 +87,7 @@ export default class Layout{
         }
     }
 
-    findVoids(){
+    findVoids() {
         // kind of a second layout-parsing pass
         // look at this.layoutMap and look for Nothing (0)
         // split voids into rectangles without overlapping
@@ -96,13 +96,13 @@ export default class Layout{
 
     getWorldFacts() {
         return this.worldFacts;
-    }   
+    }
 
-    getLayoutMap(){
+    getLayoutMap() {
         return this.layoutMap;
     }
 
-    getStructureFacts(structureType, positionArray){
+    getStructureFacts(structureType, positionArray) {
         // Populate this.worldFacts array with map data
         let structureConfig = this.detectStructureTypes[structureType];
 
@@ -112,7 +112,7 @@ export default class Layout{
             color: structureConfig.color
         };
 
-        if(structureConfig.regionType === "trace"){ 
+        if (structureConfig.regionType === "trace") {
             structureFacts.trace = positionArray;
         }
 
@@ -148,17 +148,18 @@ export default class Layout{
 
         for (let y = 0; y < this.mapData.length; y++) {
             for (let x = 0; x < this.mapData[0].length; x++) {
-                
+
                 // Skip if empty or already visited tiles
                 if (this.mapData[y][x] === -1 || visitedTiles[y][x]) continue;
 
                 // Flood fill to find connected structure
                 const found = this.floodFill(x, y, visitedTiles, structure);
-                
+
                 // Store structure if it meets criteria
                 if (found.length > 0) {
                     let box = this.getBoundingBox(found);
-                    if(box.width > this.minStructureSize && box.height > this.minStructureSize) {
+                    let minSize = structure.minSize ?? this.minStructureSize;
+                    if (box.width > minSize && box.height > minSize) {
                         structures.push(found);
                     }
                 }
@@ -183,7 +184,7 @@ export default class Layout{
         // (aka highest z-index should be the last element in the array)
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
-                for(let map of mapsArray){
+                for (let map of mapsArray) {
                     if (map.layer.data[y][x].index > 0) {
                         singleLayerMapData[y][x] = map.layer.data[y][x].index;
                     }
@@ -194,33 +195,33 @@ export default class Layout{
         return singleLayerMapData;
     }
 
-    getCorner(x, y, box){
-        if(x === box.topLeft.x){
-            if(y === box.topLeft.y)                 return "topleft";    
-            if(y === box.topLeft.y + box.height-1)  return "bottomleft";
+    getCorner(x, y, box) {
+        if (x === box.topLeft.x) {
+            if (y === box.topLeft.y) return "topleft";
+            if (y === box.topLeft.y + box.height - 1) return "bottomleft";
         }
-        if(y === box.topLeft.y){
-            if(x === box.topLeft.x + box.width-1)   return "topright";
+        if (y === box.topLeft.y) {
+            if (x === box.topLeft.x + box.width - 1) return "topright";
         }
-        if( x === box.topLeft.x + box.width-1 &&
-            y === box.topLeft.y + box.height-1)     return "bottomright";
-        
+        if (x === box.topLeft.x + box.width - 1 &&
+            y === box.topLeft.y + box.height - 1) return "bottomright";
+
         return null;
     }
 
-    getBorder(x, y, box){
-        if(y === box.topLeft.y)                 return "top";
-        if(x === box.topLeft.x + box.width-1)   return "right";
-        if(y === box.topLeft.y + box.height-1)  return "bottom";
-        if(x === box.topLeft.x)                 return "left";
-        
+    getBorder(x, y, box) {
+        if (y === box.topLeft.y) return "top";
+        if (x === box.topLeft.x + box.width - 1) return "right";
+        if (y === box.topLeft.y + box.height - 1) return "bottom";
+        if (x === box.topLeft.x) return "left";
+
         return null;
     }
 
-    getBorderFromTile(tileID, structure){
-        for(let b in structure.borders){
+    getBorderFromTile(tileID, structure) {
+        for (let b in structure.borders) {
             let bordersTiles = structure.borders[b]
-            if(bordersTiles.findIndex((elem) => elem === tileID) !== -1){
+            if (bordersTiles.findIndex((elem) => elem === tileID) !== -1) {
                 return b;
             }
         }
@@ -230,7 +231,7 @@ export default class Layout{
 
     getCornerFromTile(tileID, structure) {
         if (!structure.corners) return null;
-        
+
         for (let c in structure.corners) {
             let cornerTiles = structure.corners[c];
             if (cornerTiles.findIndex((elem) => elem === tileID) !== -1) {
@@ -241,7 +242,7 @@ export default class Layout{
     }
 
     // adjust regions in world facts if overlap detected
-    overlapHandler(){
+    overlapHandler() {
         // sort structures by priority (higher priority values take precedence)
         this.worldFacts.sort((a, b) => {
             const priorityA = this.detectStructureTypes[a.type].priority || 0;
@@ -249,29 +250,29 @@ export default class Layout{
             return priorityB - priorityA; // Sort in descending order of priority
         });
 
-        for(let i = 0; i < this.worldFacts.length; i++){
+        for (let i = 0; i < this.worldFacts.length; i++) {
             let currentStructure = this.worldFacts[i];
             let currentPriority = this.detectStructureTypes[currentStructure.type].priority || 0;
 
             // prevent structures from overlapping higher priority structures
-            for(let j = 0; j < i; j++){
+            for (let j = 0; j < i; j++) {
                 let higherPriorityStructure = this.worldFacts[j];
                 let higherPriority = this.detectStructureTypes[higherPriorityStructure.type].priority || 0;
-                
+
                 // skip if current structure higher priority
-                if(currentPriority > higherPriority) continue;
-                
+                if (currentPriority > higherPriority) continue;
+
                 // check for overlap
-                if(this.isOverlapping(currentStructure.boundingBox, higherPriorityStructure.boundingBox)){
+                if (this.isOverlapping(currentStructure.boundingBox, higherPriorityStructure.boundingBox)) {
                     // handle overlap based on structure type
-                    if(currentStructure.trace){ // TRACE
+                    if (currentStructure.trace) { // TRACE
                         // remove overlapping positions
-                        currentStructure.trace = currentStructure.trace.filter(pos => 
+                        currentStructure.trace = currentStructure.trace.filter(pos =>
                             !this.positionInStructure(pos, higherPriorityStructure)
                         );
-                        
+
                         // update bounding box 
-                        if(currentStructure.trace.length > 0){
+                        if (currentStructure.trace.length > 0) {
                             currentStructure.boundingBox = this.getBoundingBox(currentStructure.trace);
                         } else {
                             currentStructure.isEmpty = true;
@@ -279,18 +280,18 @@ export default class Layout{
                     } else {    // BOX
                         // adjust bounding box to avoid overlap
                         currentStructure.boundingBox = this.adjustBoundingBoxForOverlap(
-                            currentStructure.boundingBox, 
+                            currentStructure.boundingBox,
                             higherPriorityStructure.boundingBox
                         );
-                        
-                        if(currentStructure.boundingBox.width <= 0 || currentStructure.boundingBox.height <= 0){
+
+                        if (currentStructure.boundingBox.width <= 0 || currentStructure.boundingBox.height <= 0) {
                             currentStructure.isEmpty = true;
                         }
                     }
                 }
             }
         }
-        
+
         // remove structures that became empty after overlap handling
         this.worldFacts = this.worldFacts.filter(structure => !structure.isEmpty);
     }
@@ -298,16 +299,16 @@ export default class Layout{
     // check if two bounding boxes overlap
     isOverlapping(box1, box2) {
         return !(box1.topLeft.x + box1.width <= box2.topLeft.x ||
-                box2.topLeft.x + box2.width <= box1.topLeft.x ||
-                box1.topLeft.y + box1.height <= box2.topLeft.y ||
-                box2.topLeft.y + box2.height <= box1.topLeft.y
-            );
+            box2.topLeft.x + box2.width <= box1.topLeft.x ||
+            box1.topLeft.y + box1.height <= box2.topLeft.y ||
+            box2.topLeft.y + box2.height <= box1.topLeft.y
+        );
     }
 
     // check if a position is within a structure
     positionInStructure(position, structure) {
-        if(structure.trace) {
-            return structure.trace.some(tracePos => 
+        if (structure.trace) {
+            return structure.trace.some(tracePos =>
                 tracePos.x === position.x && tracePos.y === position.y
             );
         } else {
@@ -325,20 +326,20 @@ export default class Layout{
             width: currentBox.width,
             height: currentBox.height
         };
-        
+
         // if current box starts inside the higher priority box, move it
-        if(currentBox.topLeft.x < higherPriorityBox.topLeft.x + higherPriorityBox.width &&
-        currentBox.topLeft.y < higherPriorityBox.topLeft.y + higherPriorityBox.height) {
-            
+        if (currentBox.topLeft.x < higherPriorityBox.topLeft.x + higherPriorityBox.width &&
+            currentBox.topLeft.y < higherPriorityBox.topLeft.y + higherPriorityBox.height) {
+
             // try to move to the right of the higher priority box
             let rightEdge = higherPriorityBox.topLeft.x + higherPriorityBox.width;
-            if(rightEdge < currentBox.topLeft.x + currentBox.width) {
+            if (rightEdge < currentBox.topLeft.x + currentBox.width) {
                 newBox.topLeft.x = rightEdge;
                 newBox.width = Math.max(0, currentBox.topLeft.x + currentBox.width - rightEdge);
             } else {
                 // try to move below the higher priority box
                 let bottomEdge = higherPriorityBox.topLeft.y + higherPriorityBox.height;
-                if(bottomEdge < currentBox.topLeft.y + currentBox.height) {
+                if (bottomEdge < currentBox.topLeft.y + currentBox.height) {
                     newBox.topLeft.y = bottomEdge;
                     newBox.height = Math.max(0, currentBox.topLeft.y + currentBox.height - bottomEdge);
                 } else {
@@ -348,7 +349,7 @@ export default class Layout{
                 }
             }
         }
-        
+
         return newBox;
     }
 
@@ -398,15 +399,15 @@ export default class Layout{
             const edge = this.getBorderFromTile(this.mapData[y][x], structure);
             if (edge) {
                 // tile belongs to separate structure, don't include it
-                if (this.hasBorderConflict(x, y, edge, edgePositions, cornerPositions)) { 
-                    continue; 
+                if (this.hasBorderConflict(x, y, edge, edgePositions, cornerPositions)) {
+                    continue;
                 }
                 edgePositions[edge].push({ x, y });
             }
 
             // if it's a fill tile, make sure it doesn't conflict with edge/corner tiles
-            if(!corner && !edge){
-                if(this.illegalFill(x, y, cornerPositions)) continue;
+            if (!corner && !edge) {
+                if (this.illegalFill(x, y, cornerPositions)) continue;
             }
 
             // Mark as visited and add to structure
@@ -460,61 +461,61 @@ export default class Layout{
 
     // checks for conflicting border relationships
     hasBorderConflict(x, y, currentEdge, edgePositions, cornerPositions) {
-        if(edgePositions[currentEdge].length === 0) return false;
+        if (edgePositions[currentEdge].length === 0) return false;
 
         switch (currentEdge) {
             case 'top':
                 // top edge shouldn't have a bottom edge/corner to its north
-                if(edgePositions.bottom.some(pos => pos.y < y)) return true;
-                if(cornerPositions.bottomleft.some(pos => pos.y < y)) return true;
-                if(cornerPositions.bottomright.some(pos => pos.y < y)) return true;
+                if (edgePositions.bottom.some(pos => pos.y < y)) return true;
+                if (cornerPositions.bottomleft.some(pos => pos.y < y)) return true;
+                if (cornerPositions.bottomright.some(pos => pos.y < y)) return true;
 
                 // top edge should not extend past left or right edges
-                if(edgePositions.left.length > 0 && x < edgePositions.left[0].x) return true;
-                if(edgePositions.right.length > 0 && x > edgePositions.right[0].x) return true;
+                if (edgePositions.left.length > 0 && x < edgePositions.left[0].x) return true;
+                if (edgePositions.right.length > 0 && x > edgePositions.right[0].x) return true;
 
                 // top edge should only have one y value
-                if(y !== edgePositions.top[0].y) return true;
+                if (y !== edgePositions.top[0].y) return true;
                 break;
             case 'bottom':
                 // bottom edge shouldn't have a top edge/corner to its south
-                if(edgePositions.top.some(pos => pos.y > y)) return true;
-                if(cornerPositions.topleft.some(pos => pos.y > y)) return true;
-                if(cornerPositions.topright.some(pos => pos.y > y)) return true;
+                if (edgePositions.top.some(pos => pos.y > y)) return true;
+                if (cornerPositions.topleft.some(pos => pos.y > y)) return true;
+                if (cornerPositions.topright.some(pos => pos.y > y)) return true;
 
                 // bottom edge should not extend past left or right edges
-                if(edgePositions.left.length > 0 && x < edgePositions.left[0].x) return true;
-                if(edgePositions.right.length > 0 && x > edgePositions.right[0].x) return true;
+                if (edgePositions.left.length > 0 && x < edgePositions.left[0].x) return true;
+                if (edgePositions.right.length > 0 && x > edgePositions.right[0].x) return true;
 
                 // bottom edge should only have one y value
-                if(y !== edgePositions.bottom[0].y) return true;
+                if (y !== edgePositions.bottom[0].y) return true;
                 break;
             case 'left':
                 // left edge shouldn't have a right edge/corner to its west
-                if(edgePositions.right.some(pos => pos.x < x)) return true;
-                if(cornerPositions.topright.some(pos => pos.x < x)) return true;
-                if(cornerPositions.bottomright.some(pos => pos.x < x)) return true;
+                if (edgePositions.right.some(pos => pos.x < x)) return true;
+                if (cornerPositions.topright.some(pos => pos.x < x)) return true;
+                if (cornerPositions.bottomright.some(pos => pos.x < x)) return true;
 
 
                 // left edge should not extend past top or bottom edges
-                if(edgePositions.top.length > 0 && y < edgePositions.top[0].y) return true;
-                if(edgePositions.bottom.length > 0 && y > edgePositions.bottom[0].y) return true;
+                if (edgePositions.top.length > 0 && y < edgePositions.top[0].y) return true;
+                if (edgePositions.bottom.length > 0 && y > edgePositions.bottom[0].y) return true;
 
                 // left edge should only have one x value
-                if(x !== edgePositions.left[0].x) return true;
+                if (x !== edgePositions.left[0].x) return true;
                 break;
             case 'right':
                 // right edge shouldn't have a left edge/corner to its east
-                if(edgePositions.left.some(pos => pos.x > x)) return true;
-                if(cornerPositions.topleft.some(pos => pos.x > x)) return true;
-                if(cornerPositions.bottomleft.some(pos => pos.x > x)) return true;
+                if (edgePositions.left.some(pos => pos.x > x)) return true;
+                if (cornerPositions.topleft.some(pos => pos.x > x)) return true;
+                if (cornerPositions.bottomleft.some(pos => pos.x > x)) return true;
 
                 // right edge should not extend past top or bottom edges
-                if(edgePositions.top.length > 0 && y < edgePositions.top[0].y) return true;
-                if(edgePositions.bottom.length > 0 && y > edgePositions.bottom[0].y) return true;
+                if (edgePositions.top.length > 0 && y < edgePositions.top[0].y) return true;
+                if (edgePositions.bottom.length > 0 && y > edgePositions.bottom[0].y) return true;
 
                 // right edge should only have one x value
-                if(x !== edgePositions.right[0].x) return true;
+                if (x !== edgePositions.right[0].x) return true;
                 break;
         }
 
@@ -527,7 +528,7 @@ export default class Layout{
         if (cornerPositions[currentCorner].length > 0) {
             return true;
         }
-        
+
         // Check spatial relationships between corners and edges
         switch (currentCorner) {
             case 'topleft':
@@ -551,31 +552,31 @@ export default class Layout{
                 if (edgePositions.left.length > 0 && x !== edgePositions.left[0].x) return true;
                 break;
         }
-        
+
         return false;
     }
 
     // check for fill conflicts
-    illegalFill(x, y, cornerPositions){
-        for(let c in cornerPositions){
+    illegalFill(x, y, cornerPositions) {
+        for (let c in cornerPositions) {
             let corner = cornerPositions[c];
 
             switch (corner) {
                 case 'topleft':
-                    if(x <= corner.x) return true;
-                    if(y <= corner.y) return true;
+                    if (x <= corner.x) return true;
+                    if (y <= corner.y) return true;
                     break;
                 case 'topright':
-                    if(x >= corner.x) return true;
-                    if(y <= corner.y) return true;
+                    if (x >= corner.x) return true;
+                    if (y <= corner.y) return true;
                     break;
                 case 'bottomright':
-                    if(x >= corner.x) return true;
-                    if(y >= corner.y) return true;
+                    if (x >= corner.x) return true;
+                    if (y >= corner.y) return true;
                     break;
                 case 'bottomleft':
-                    if(x <= corner.x) return true;
-                    if(y >= corner.y) return true;
+                    if (x <= corner.x) return true;
+                    if (y >= corner.y) return true;
                     break;
             }
 
@@ -588,7 +589,7 @@ export default class Layout{
     isValidRectangle(edgePositions, cornerPositions) {
         // Check that we don't have conflicting corner arrangements
         const corners = Object.keys(cornerPositions).filter(corner => cornerPositions[corner].length > 0);
-        
+
         if (corners.length >= 2) {
             // If we have both topleft and bottomright, they should form a valid diagonal
             if (cornerPositions.topleft.length > 0 && cornerPositions.bottomright.length > 0) {
@@ -596,14 +597,14 @@ export default class Layout{
                 const br = cornerPositions.bottomright[0];
                 if (tl.x >= br.x || tl.y >= br.y) return false;
             }
-            
+
             // If we have both topright and bottomleft, they should form a valid diagonal
             if (cornerPositions.topright.length > 0 && cornerPositions.bottomleft.length > 0) {
                 const tr = cornerPositions.topright[0];
                 const bl = cornerPositions.bottomleft[0];
                 if (tr.x <= bl.x || tr.y >= bl.y) return false;
             }
-            
+
             // Check that corners on the same edge align properly
             if (cornerPositions.topleft.length > 0 && cornerPositions.topright.length > 0) {
                 if (cornerPositions.topleft[0].y !== cornerPositions.topright[0].y) return false;
@@ -618,7 +619,7 @@ export default class Layout{
                 if (cornerPositions.topright[0].x !== cornerPositions.bottomright[0].x) return false;
             }
         }
-        
+
         return true;
     }
 }
