@@ -56,14 +56,22 @@ export default class Autotiler extends Phaser.Scene {
       this.structures = e.detail.structures;
       this.regions = new Regions(this.sketch, this.structures, this.tileSize).get();
       
+      console.log("Detected regions:", this.regions);
+
       this.createGroundMap()
       const result = this.generate(this.regions);
 
       if(result){
-        const pathLayer = generatePaths(result);
+        // Pass path traces to generatePaths
+        const pathTraces = this.regions.Path || [];
+        const pathLayer = generatePaths(result, pathTraces);
 
-        this.displayMap(this.pathsMap, pathLayer, "tilemap");
-        this.displayMap(this.structsMap, result, "tilemap");
+        console.log("Path layer generated:", pathLayer);
+
+        // Merge paths and structures into one layer
+        const mergedLayer = this.mergeLayers(pathLayer, result);
+        
+        this.structsMap = this.displayMap(this.structsMap, mergedLayer, "tilemap");
       }
     });
 
@@ -136,7 +144,33 @@ export default class Autotiler extends Phaser.Scene {
     // make a layer to make new map visible
     let tileset = map.addTilesetImage("tileset", tilesetName, 16, 16, 0, 0, gid);
     map.createLayer(0, tileset, 0, 0, 1);
+
+    return map;
   }	
+
+  /**
+   * Merge two tile layers. Structure tiles (-1 means empty) get overlaid on path tiles.
+   * @param {number[][]} bottomLayer - Path layer
+   * @param {number[][]} topLayer - Structure layer
+   * @returns {number[][]} Merged layer
+   */
+  mergeLayers(bottomLayer, topLayer) {
+    const merged = [];
+    
+    for(let y = 0; y < bottomLayer.length; y++){
+      merged[y] = [];
+      for(let x = 0; x < bottomLayer[y].length; x++){
+        // If structure layer has a tile, use it; otherwise use path tile
+        if(topLayer[y][x] !== -1){
+          merged[y][x] = topLayer[y][x];
+        } else {
+          merged[y][x] = bottomLayer[y][x];
+        }
+      }
+    }
+    return merged;
+  }
+  
 
   async exportMap(zip){
     // add map data to the zip

@@ -16,6 +16,9 @@ export default function generateLayout(regions, detectStructuresID, placeStructu
     const model = new WFCModel().learn(layouts, 2);
     
     for(let type in regions){
+        // Skip paths - they're generated separately after structures
+        if(type.toLowerCase() === 'path') continue;
+        
         for(let box of regions[type]){
             placeStructureInLayout(type.toLowerCase(), box, model);
         }
