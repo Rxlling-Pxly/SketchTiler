@@ -52,27 +52,7 @@
 
           <!-- OTHER SKETCHPAD INFORMATION -->
           <!-- WFC demo -->
-          <div id="wfc-demo">
-            <h2 class="title is-4">Controls</h2>
-            <div class="buttons mt-3">
-              <span id="overlay">
-                <input id="overlay-toggle"
-                  type="checkbox" 
-                  class="onoffswitch-checkbox"  
-                  disabled
-                />
-                Toggle overlay
-              </span>
-              <span id="overlay2">
-                <input id="overlay2-toggle"
-                  type="checkbox" 
-                  class="onoffswitch-checkbox"  
-                />
-                Toggle overlay 2
-              </span>
-            </div>
-            <div id="profileMessage"></div>
-          </div>
+          <div id="wfc-demo"></div>
 
           <!-- GENERATE & EXTRA SETTINGS -->
           <div id="bottom_buttons">
@@ -94,41 +74,21 @@
           </div>
 
           <!-- PHASER-->
+          
           <div style="display:flex; overflow:hidden; gap: 0;">
             <div id="phaser"></div>
             <div id="pattern-panel"></div>
           </div>
 
           <!-- DATA FOR OUTPUT -->
-          <div id="data">
-            <button id="update-input-button" class="export_button">[DEV] Update input</button>
-            <button id="export-map-button" class="export_button">Export map</button>
-            <button id="export-sketch-button" class="export_button">Export sketch</button>
-          </div>
+            <div id="data">
+              <button id="update-input-button" class="export_button">[DEV] Update input</button>
+              <button id="export-map-button" class="export_button">Export map</button>
+              <button id="export-sketch-button" class="export_button">Export sketch</button>
+            </div>
         </div>
       </div>
 
-      <!-- SKETCHTILER INSTRUCTIONS 
-      <div id="instructions" class="content">
-        <h2 class="title is-2">SketchTiler - the sketch to tilemap application</h2>
-
-        <h3 class="subtitle is-4">Instructions</h3>
-        <ul>
-          <li>The "House" and "Forest" buttons are structure pens. To draw a house, use the house pen, etc.</li>
-          <li>The “Normalize Shapes” toggle automatically interprets your strokes into the shape it most resembles.</li>
-          <li>Press “Clear” to completely wipe the canvas.</li>
-          <li>Press “Generate” to have a tilemap generated from your sketch. It will take some time.</li>
-          <li>You can still draw new structures after you’ve pressed Generate, however your existing map will be re-generated and look different.</li>
-          <li>Structures generated from your sketches will have full opacity, whereas background suggestions will be partially transparent.</li>
-        </ul>
-
-        <h3>Jankiness you'll unfortunately have to deal with for now</h3>
-        <ul>
-          <li>You can draw structures using multiple strokes, however, strokes belonging to the same structure should be close to each other (or else they might be interpreted as multiple structures).</li>
-          <li>If you encounter an error when generating, give it a few more tries before giving up</li>
-        </ul>
-      </div>
-      -->
       <div id="bottom-row">
           <!-- Puttin 2 WFC demos just for placeholder-->
           <!-- Replce with layers and structures menu-->
