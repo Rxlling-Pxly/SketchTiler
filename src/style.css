@@ -153,6 +153,7 @@
 #structure_buttons {
   display: flex;
   gap: 7px;
+  width: 355px;
 }
 
 #smaller_buttons {

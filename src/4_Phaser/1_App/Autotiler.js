@@ -173,8 +173,8 @@ export default class Autotiler extends Phaser.Scene {
 
 
       // enable map export
-      const exportBtn = document.getElementById("export-map-button")
-      exportBtn.disabled = false
+      //const exportBtn = document.getElementById("export-map-button")
+      //exportBtn.disabled = false
     }
 
     this.displayManager.showLockRects()

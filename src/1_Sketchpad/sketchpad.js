@@ -238,7 +238,7 @@ sketchCanvas.addEventListener("mousemove", (ev) => {
 			sketchCanvas.dispatchEvent(changeDraw);
 
 			// enable exports
-			exportButton.disabled = false;
+			//exportButton.disabled = false;
 		}
 	}
 
@@ -352,7 +352,7 @@ window.addEventListener("mapToSketch", (e) => {
 	redoStack = [];
 
 	sketchCanvas.dispatchEvent(changeDraw);
-	exportButton.disabled = false;
+	//exportButton.disabled = false;
 })
 
 //zoom event listener
@@ -412,7 +412,7 @@ clearButton.onclick = () => {
 	ctx.clearRect(0, 0, sketchCanvas.width, sketchCanvas.height);
 	sketchCanvas.dispatchEvent(changeDraw);	// redraw sketch canvas 
 
-	exportButton.disabled = true;	
+	//exportButton.disabled = true;	
 
 	// sends sketch data to Phaser scene
 	const toPhaser = new CustomEvent("clearSketch", { 
