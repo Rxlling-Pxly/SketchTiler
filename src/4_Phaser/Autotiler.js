@@ -82,14 +82,13 @@ export default class Autotiler extends Phaser.Scene {
 
   // calls generators
   generate(regions, sketchImage) {
-    // complete layout from user sketch data
-    // complete layout from user sketch data
+    // Try standard generation first (all structures together)
     let layout = generateLayout(
       regions,
       "tiny_town",
       "color_blocks",
-      2/*, 
-      true*/
+      2,
+      true
     );
 
     // Fallback: If standard generation failed (likely due to contradiction), try layered generation
@@ -132,12 +131,21 @@ export default class Autotiler extends Phaser.Scene {
       // Skip layer if no user regions present (avoids unconstrained generation)
       if (!hasRegions) continue;
 
-      const layout = generateLayout(
-        layerRegions,
-        "tiny_town",
-        "color_blocks",
-        2
-      );
+      // Retry this layer multiple times before giving up
+      let layout = null;
+      const maxLayerAttempts = 3;
+      for (let attempt = 1; attempt <= maxLayerAttempts; attempt++) {
+        layout = generateLayout(
+          layerRegions,
+          "tiny_town",
+          "color_blocks",
+          2,
+          true,
+          layerTypes
+        );
+        if (layout) break;
+        console.warn(`Layer [${layerTypes.join(', ')}] attempt ${attempt}/${maxLayerAttempts} failed, retrying...`);
+      }
 
       if (layout) {
         success = true;
@@ -147,6 +155,8 @@ export default class Autotiler extends Phaser.Scene {
           layerTypes.includes(fact.type.toLowerCase())
         );
         combinedWorldFacts.push(...validFacts);
+      } else {
+        console.warn(`Layer [${layerTypes.join(', ')}] failed after ${maxLayerAttempts} attempts, skipping.`);
       }
     }
 
@@ -258,10 +268,18 @@ export default class Autotiler extends Phaser.Scene {
     // generate all structures in layout
     for (let structure of layout.worldFacts) {
       let region = structure.boundingBox;
-      const gen = this.generator[structure.type](structure);
 
-      if (!gen) { // if structure generation fails, just move on
-        console.warn(`Structure generation failed: ${structure.type} at (${region.topLeft.x}, ${region.topLeft.y})`);
+      // Retry individual structure generation up to 3 times
+      let gen = null;
+      const maxRetries = 3;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        gen = this.generator[structure.type](structure);
+        if (gen) break;
+        console.warn(`Structure ${structure.type} at (${region.topLeft.x}, ${region.topLeft.y}) attempt ${attempt}/${maxRetries} failed, retrying...`);
+      }
+
+      if (!gen) {
+        console.warn(`Structure generation failed after ${maxRetries} attempts: ${structure.type} at (${region.topLeft.x}, ${region.topLeft.y})`);
         continue;
       }
 

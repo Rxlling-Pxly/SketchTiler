@@ -9,10 +9,11 @@ const tilesetInfo = TILEMAP["tiny_town"];
 
 /**
  * @param {BoundingBox} regions
+ * @param {string[]} [layerTypes] - If provided, only keep these structure types in training data (others become void)
  * @returns {TilemapImage}
  */
-export default function generateLayout(regions, detectStructuresID, placeStructuresID, minStructreSize, preventOverlaps = false) {
-    const layouts = learnLayout(detectStructuresID, placeStructuresID, minStructreSize, preventOverlaps);
+export default function generateLayout(regions, detectStructuresID, placeStructuresID, minStructreSize, preventOverlaps = false, layerTypes = null) {
+    const layouts = learnLayout(detectStructuresID, placeStructuresID, minStructreSize, preventOverlaps, layerTypes);
     const model = new WFCModel().learn(layouts, 2);
 
     for (let type in regions) {
@@ -39,7 +40,7 @@ export default function generateLayout(regions, detectStructuresID, placeStructu
     }
 
     if (!map) {
-        console.error("Contradiction created");
+        console.warn("Layout contradiction — will retry or fall back to layered generation");
         return false;
     }
 
@@ -48,7 +49,6 @@ export default function generateLayout(regions, detectStructuresID, placeStructu
         minStructreSize,
         STRUCTURE_TILES[placeStructuresID],
         STRUCTURE_TILES[placeStructuresID],
-        minStructreSize,
         preventOverlaps
     );
 
@@ -60,8 +60,23 @@ export default function generateLayout(regions, detectStructuresID, placeStructu
  * 
  * @param {string} detectStructuresID - Key for STRUCTURE_TILES to use.
  */
-function learnLayout(detectStructuresID, placeStructuresID, minStructreSize, preventOverlaps) {
+function learnLayout(detectStructuresID, placeStructuresID, minStructreSize, preventOverlaps, layerTypes) {
     let layouts = []
+
+    // Collect tile IDs that belong to types NOT in this layer, so we can replace them with void (0)
+    let excludedTileIDs = null;
+    if (layerTypes) {
+        excludedTileIDs = new Set();
+        const placeStructures = STRUCTURE_TILES[placeStructuresID];
+        for (const type in placeStructures) {
+            if (type === 'void') continue;
+            if (!layerTypes.includes(type)) {
+                for (const id of placeStructures[type].tileIDs) {
+                    excludedTileIDs.add(id);
+                }
+            }
+        }
+    }
 
     // create layouts from structure maps
     for (let structureMap of IMAGES.STRUCTURES) {
@@ -73,7 +88,16 @@ function learnLayout(detectStructuresID, placeStructuresID, minStructreSize, pre
             preventOverlaps
         );
 
-        layouts.push(mapLayout.getLayoutMap());
+        let layoutMap = mapLayout.getLayoutMap();
+
+        // Replace excluded structure tiles with void (0) so WFC only learns this layer's patterns
+        if (excludedTileIDs) {
+            layoutMap = layoutMap.map(row =>
+                row.map(tile => excludedTileIDs.has(tile) ? 0 : tile)
+            );
+        }
+
+        layouts.push(layoutMap);
     }
 
     return layouts;
