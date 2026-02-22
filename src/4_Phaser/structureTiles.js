@@ -31,7 +31,7 @@ const STRUCTURE_TILES = {
                 73, 74, 75, 76, 77, 78, 79, 80,
                 85, 86, 87, 88, 89, 90, 91, 92
             ],
-            priority: 3
+            priority: 4
         },
         path: {
             regionType: "trace",
