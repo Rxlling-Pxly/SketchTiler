@@ -44,32 +44,41 @@ export default class ConstraintSolver {
     this.performanceProfiler.clearData();
     this.profileFunctions(profilePerformance);
 
-    this.initializeWaveMatrix(weights.length, width, height);
-    this.setTiles(setTileInstructions, adjacencies);
-
-    let lastObservedCellPosition = new Uint32Array([0, 0]);
-
     let numAttempts = 1;
     while (numAttempts <= maxAttempts) { // use <= so `maxAttempts` is allowed to be set to 1
-      
-      const position = this.getCellToObservePosition(lastObservedCellPosition, weights);
-      if (!position) {
-        if (logProgress) console.log(`solved in ${numAttempts} attempt(s)`);
-        if (profilePerformance) this.performanceProfiler.logData();
-        return true;
-      }
-      const [y, x] = position;
-
-      this.observe(y, x, weights);
-      lastObservedCellPosition.set([y, x]);
-
-      if (logProgress) console.log("propagating...");
-      const contradictionCreated = this.propagate(y, x, adjacencies);
-      if (contradictionCreated) {
-        this.initializeWaveMatrix(weights.length, width, height);
-        this.setTiles(setTileInstructions, adjacencies);
+      this.initializeWaveMatrix(weights.length, width, height);
+      const setTilesContradiction = this.setTiles(setTileInstructions, adjacencies);
+      if (setTilesContradiction) {
+        if (logProgress) console.warn(`setTiles contradiction on attempt ${numAttempts}`);
         numAttempts++;
-        lastObservedCellPosition = new Uint32Array([0, 0]);
+        continue;
+      }
+
+      let lastObservedCellPosition = new Uint32Array([0, 0]);
+      let contradicted = false;
+
+      while (true) {
+        const position = this.getCellToObservePosition(lastObservedCellPosition, weights);
+        if (!position) {
+          if (logProgress) console.log(`solved in ${numAttempts} attempt(s)`);
+          if (profilePerformance) this.performanceProfiler.logData();
+          return true;
+        }
+        const [y, x] = position;
+
+        this.observe(y, x, weights);
+        lastObservedCellPosition.set([y, x]);
+
+        if (logProgress) console.log("propagating...");
+        const contradictionCreated = this.propagate(y, x, adjacencies);
+        if (contradictionCreated) {
+          contradicted = true;
+          break;
+        }
+      }
+
+      if (contradicted) {
+        numAttempts++;
       }
     }
 
@@ -129,9 +138,11 @@ export default class ConstraintSolver {
         continue;
       }
       this.waveMatrix[y][x].intersectWith(tilePatternsBitmask);
+      if (this.waveMatrix[y][x].isEmpty()) return true;
       const contradictionCreated = this.propagate(y, x, adjacencies);
-      if (contradictionCreated) throw new Error("User's set tiles formed a contradiction.");
+      if (contradictionCreated) return true;
     }
+    return false;
   }
 
   /**

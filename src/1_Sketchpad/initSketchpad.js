@@ -5,7 +5,7 @@
  */
 
 import TILEMAP from "../4_Phaser/3_Utils/tilemap.js";
-import {drawGrid} from "./sketchpad.js"; // so the file is executed
+import { drawGrid } from "./sketchpad.js";
 
 const tilesetInfo = TILEMAP["tiny_town"];
 

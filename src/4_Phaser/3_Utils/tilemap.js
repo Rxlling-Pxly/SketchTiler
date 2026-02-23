@@ -64,6 +64,10 @@ const TILEMAP = {
 
       FILL: [3]
     },
+
+    path: {
+      FILL: [4]
+    }
   }
 };
 export default TILEMAP;
