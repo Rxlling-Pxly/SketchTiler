@@ -5,10 +5,12 @@ import IMAGES from "../../2_WFC/2_Input/images.js";
 import generateHouse from "../../3_Generators/generateHouse.js";
 import generateForest from "../../3_Generators/generateForest.js";
 import generateFence from "../../3_Generators/generateFence.js";
+import generatePath from "../../3_Generators/generatePath.js";
 import generatePaths from "../../3_Generators/generatePaths.js";
 import { Regions } from "../../1_Sketchpad/1_Classes/regions.js";
 //import { exportSketch } from "../../1_Sketchpad/sketchpad.js";
 import generateLayout from "../../3_Generators/generateLayout.js";
+import STRUCTURE_TILES from "../3_Utils/structureTiles.js";
 
 // import managers
 import StateManager from "./1_Classes/StateManager.js"
@@ -85,21 +87,20 @@ export default class Autotiler extends Phaser.Scene {
   // make this.generator object
   initializeGenerators() {
     this.generators = {
-      house: (region) => generateHouse({ width: region.width, height: region.height }),
-      path: (region) => console.log("TODO: link path generator", region),
-      fence: (region) => generateFence({ width: region.width, height: region.height }),
-      forest: (region) => generateForest({ width: region.width, height: region.height })
+      house: (structure) => generateHouse((structure && structure.boundingBox) ? structure.boundingBox : structure),
+      path: (structure) => generatePath(structure),
+      fence: (structure) => generateFence((structure && structure.boundingBox) ? structure.boundingBox : structure),
+      forest: (structure) => generateForest((structure && structure.boundingBox) ? structure.boundingBox : structure)
     }
   }
   
   setupUIControls() {
     // EXPORT
-    /*
     const exportBtn = document.getElementById("export-map-button")
     if (exportBtn) {
       exportBtn.addEventListener("click", () => this.export("map"))
       exportBtn.disabled = true
-    }\*/
+    }
     
     // OVERLAY TOGGLE
     const overlayToggle = document.getElementById('overlay-toggle');
@@ -173,8 +174,8 @@ export default class Autotiler extends Phaser.Scene {
 
 
       // enable map export
-      //const exportBtn = document.getElementById("export-map-button")
-      //exportBtn.disabled = false
+      const exportBtn = document.getElementById("export-map-button")
+      if (exportBtn) exportBtn.disabled = false
     }
 
     this.displayManager.showLockRects()
@@ -250,45 +251,403 @@ export default class Autotiler extends Phaser.Scene {
   //*** GENERATION ***//
   generate(regions) {
     if (this.state.layout) delete this.state.layout
-    
-    // 2-pass hierarchical approach
-    // first, generate layout using WFC layout model
-    this.state.layout = generateLayout(regions, "tiny_town", "color_blocks", 2)
-    
-    // then, fill layout regions with tiles
-    const map = this.generateTilemapFromLayout(this.state.layout)
-    return map
+
+    // Try standard generation first (all structures together)
+    let layout = generateLayout(
+      regions,
+      "tiny_town",
+      "color_blocks",
+      2,
+      true
+    )
+
+    // Fallback: If standard generation failed (likely due to contradiction), try layered generation
+    if (!layout) {
+      console.warn("Contradiction detected in standard generation. Attempting layered generation...")
+      layout = this.generateLayered(regions)
+    }
+
+    if (!layout) return null
+
+    this.state.layout = layout
+    return this.generateTilemapFromLayout(layout)
+  }
+
+  generateLayered(regions) {
+    // needsFilter: whether to filter training data for this layer
+    const layers = [
+      { types: ["fence", "path"], needsFilter: true },
+      { types: ["house", "forest"], needsFilter: false },
+    ]
+
+    const combinedWorldFacts = []
+    const combinedLayoutMap = Array.from({ length: this.height }, () => Array(this.width).fill(0))
+    let success = false
+
+    for (const layer of layers) {
+      const layerTypes = layer.types
+
+      const layerRegions = {}
+      let hasRegions = false
+
+      for (const type in regions) {
+        if (layerTypes.includes(type.toLowerCase())) {
+          layerRegions[type] = regions[type]
+          hasRegions = true
+        }
+      }
+
+      if (!hasRegions) continue
+
+      // Retry this layer multiple times before giving up
+      let layout = null
+      const maxLayerAttempts = 3
+      for (let attempt = 1; attempt <= maxLayerAttempts; attempt++) {
+        layout = generateLayout(
+          layerRegions,
+          "tiny_town",
+          "color_blocks",
+          2,
+          true,
+          layer.needsFilter ? layerTypes : null
+        )
+        if (layout) break
+        console.warn(`Layer [${layerTypes.join(", ")}] attempt ${attempt}/${maxLayerAttempts} failed, retrying...`)
+      }
+
+      if (layout) {
+        success = true
+        const validFacts = layout.worldFacts.filter((fact) =>
+          layerTypes.includes(fact.type.toLowerCase())
+        )
+        combinedWorldFacts.push(...validFacts)
+        this.applyLayoutMapOverlay(combinedLayoutMap, layout.layoutMap)
+      } else {
+        // Fallback: create worldFacts directly from user-drawn regions
+        console.warn(`Layer [${layerTypes.join(", ")}] WFC failed, using user regions directly as fallback.`)
+        const fallbackFacts = this.createWorldFactsFromRegions(layerRegions)
+        if (fallbackFacts.length > 0) {
+          success = true
+          combinedWorldFacts.push(...fallbackFacts)
+          this.paintFactsToLayoutMap(combinedLayoutMap, fallbackFacts)
+        }
+      }
+    }
+
+    if (!success) return null
+
+    return {
+      worldFacts: combinedWorldFacts,
+      layoutMap: combinedLayoutMap,
+    }
+  }
+
+  /**
+   * Create worldFacts directly from user-drawn regions (fallback when WFC layout generation fails).
+   * @param {Record<string, any[]>} regions - User-drawn regions keyed by structure type.
+   * @returns {object[]} Array of worldFact objects.
+   */
+  createWorldFactsFromRegions(regions) {
+    const structureDefs = STRUCTURE_TILES["tiny_town"]
+    const facts = []
+
+    for (const type in regions) {
+      const typeLower = type.toLowerCase()
+      const config = structureDefs[typeLower]
+      if (!config) continue
+
+      for (const region of regions[type]) {
+        if (Array.isArray(region)) {
+          if (region.length === 0) continue
+
+          let minX = region[0].x, maxX = region[0].x
+          let minY = region[0].y, maxY = region[0].y
+          for (const p of region) {
+            if (p.x < minX) minX = p.x
+            if (p.x > maxX) maxX = p.x
+            if (p.y < minY) minY = p.y
+            if (p.y > maxY) maxY = p.y
+          }
+
+          facts.push({
+            type: typeLower,
+            boundingBox: {
+              topLeft: { x: minX, y: minY },
+              width: 1 + maxX - minX,
+              height: 1 + maxY - minY,
+            },
+            color: config.color,
+            trace: region,
+          })
+        } else {
+          facts.push({
+            type: typeLower,
+            boundingBox: {
+              topLeft: { x: region.topLeft.x, y: region.topLeft.y },
+              width: region.width,
+              height: region.height,
+            },
+            color: config.color,
+          })
+        }
+      }
+    }
+
+    return facts
   }
   
   // second, higher-fidelity pass in hierarchical approach 
   generateTilemapFromLayout(layout) {
     let tilemapImage = Array.from({ length: this.height }, () => Array(this.width).fill(-1))
-    
-    // loop through regions in layout
-    for (let structure of layout.worldFacts) {
-      let region = structure.boundingBox
-      
+
+    // Get priority for a structure type (higher number = drawn on top)
+    const getPriority = (type) => {
+      const info = STRUCTURE_TILES["tiny_town"][type]
+      return info && info.priority != null ? info.priority : 0
+    }
+
+    // Sort structures: high priority first.
+    const sortedFacts = [...layout.worldFacts].sort(
+      (a, b) => getPriority(b.type) - getPriority(a.type)
+    )
+
+    // Pre-trim regions so lower-priority boxes do not overlap higher-priority boxes.
+    const trimmedFacts = this.trimOverlappingFacts(sortedFacts)
+
+    // Ownership map: tracks whether a cell is already claimed by any structure
+    const owned = Array.from({ length: this.height }, () => Array(this.width).fill(false))
+
+    for (let structure of trimmedFacts) {
+      const region = structure.boundingBox
+
       // check if region is locked already
       if (this.regionManager.regionOverlap(region, this.state.lockedRegions)) {
-        // console.log(structure)
         const struct = this.regionManager.getRegionFromMap(region, this.state.lockedTiles)
-        this.regionManager.copyRegionTiles(region, struct, tilemapImage)  // get tiles and skip WFC call
+        this.blitRegionTiles(region, struct, tilemapImage, owned)
         continue
       }
-      
-      // WFC: call region-specific model
-      const gen = this.generators[structure.type](region)
-      
-      if (!gen) {
-        console.warn(`Structure generation failed: ${structure.type} at (${region.topLeft.x}, ${region.topLeft.y})`)
-        continue  // if failed, give console warning but continue on
+
+      // Retry individual structure generation up to 3 times
+      let gen = null
+      const maxRetries = 3
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        gen = this.generateStructureTiles(structure)
+        if (gen) break
+        console.warn(`Structure ${structure.type} at (${region.topLeft.x}, ${region.topLeft.y}) attempt ${attempt}/${maxRetries} failed, retrying...`)
       }
-      
-      // put generated tiles in final tilemap 
-      this.regionManager.copyRegionTiles(region, gen, tilemapImage)
+
+      if (!gen) {
+        console.warn(`Structure generation failed after ${maxRetries} attempts: ${structure.type} at (${region.topLeft.x}, ${region.topLeft.y})`)
+        continue
+      }
+
+      this.blitRegionTiles(region, gen, tilemapImage, owned)
     }
-    
+
     return tilemapImage
+  }
+
+  generateStructureTiles(structure) {
+    const generator = this.generators[structure.type]
+    if (!generator) return false
+    return generator(structure)
+  }
+
+  blitRegionTiles(region, source, dest, owned) {
+    for (let y = 0; y < region.height; y++) {
+      for (let x = 0; x < region.width; x++) {
+        const dy = region.topLeft.y + y
+        const dx = region.topLeft.x + x
+
+        if (dy < 0 || dy >= this.height || dx < 0 || dx >= this.width) continue
+        if (!source[y] || source[y][x] == null || source[y][x] === -1) continue
+        if (owned[dy][dx]) continue
+
+        dest[dy][dx] = source[y][x]
+        owned[dy][dx] = true
+      }
+    }
+  }
+
+  applyLayoutMapOverlay(target, overlay) {
+    if (!overlay) return
+    for (let y = 0; y < Math.min(target.length, overlay.length); y++) {
+      for (let x = 0; x < Math.min(target[y].length, overlay[y].length); x++) {
+        if (overlay[y][x] > 0) target[y][x] = overlay[y][x]
+      }
+    }
+  }
+
+  paintFactsToLayoutMap(layoutMap, facts) {
+    for (const fact of facts) {
+      if (fact.trace) {
+        for (const p of fact.trace) {
+          if (this.inBounds(p.x, p.y)) layoutMap[p.y][p.x] = fact.color
+        }
+        continue
+      }
+
+      const box = fact.boundingBox
+      for (let y = box.topLeft.y; y < box.topLeft.y + box.height; y++) {
+        for (let x = box.topLeft.x; x < box.topLeft.x + box.width; x++) {
+          if (this.inBounds(x, y)) layoutMap[y][x] = fact.color
+        }
+      }
+    }
+  }
+
+  trimOverlappingFacts(sortedFacts) {
+    const claimed = Array.from({ length: this.height }, () => Array(this.width).fill(false))
+    const result = []
+
+    for (const fact of sortedFacts) {
+      const typeInfo = STRUCTURE_TILES["tiny_town"][fact.type]
+      const regionType = typeInfo && typeInfo.regionType ? typeInfo.regionType : "box"
+      const factCopy = {
+        ...fact,
+        boundingBox: { ...fact.boundingBox, topLeft: { ...fact.boundingBox.topLeft } }
+      }
+
+      if (regionType === "trace") {
+        const trimmedTrace = this.trimTraceAgainstClaimed(factCopy.trace || [], claimed)
+        if (trimmedTrace.length === 0) continue
+
+        factCopy.trace = trimmedTrace
+        const bounds = this.getBoundsFromPoints(trimmedTrace)
+        if (!bounds) continue
+        factCopy.boundingBox = bounds
+
+        for (const p of trimmedTrace) {
+          if (this.inBounds(p.x, p.y)) claimed[p.y][p.x] = true
+        }
+        result.push(factCopy)
+        continue
+      }
+
+      const trimmedBox = this.shrinkBoxToAvoidClaimed(factCopy.boundingBox, claimed)
+      if (!trimmedBox) continue
+
+      factCopy.boundingBox = trimmedBox
+      this.markBoxClaimed(trimmedBox, claimed)
+      result.push(factCopy)
+    }
+
+    return result
+  }
+
+  trimTraceAgainstClaimed(trace, claimed) {
+    return trace.filter(p => this.inBounds(p.x, p.y) && !claimed[p.y][p.x])
+  }
+
+  getBoundsFromPoints(points) {
+    if (!points || points.length === 0) return null
+
+    let minX = points[0].x, maxX = points[0].x
+    let minY = points[0].y, maxY = points[0].y
+    for (const p of points) {
+      if (p.x < minX) minX = p.x
+      if (p.x > maxX) maxX = p.x
+      if (p.y < minY) minY = p.y
+      if (p.y > maxY) maxY = p.y
+    }
+
+    return {
+      topLeft: { x: minX, y: minY },
+      width: maxX - minX + 1,
+      height: maxY - minY + 1
+    }
+  }
+
+  markBoxClaimed(box, claimed) {
+    for (let y = box.topLeft.y; y < box.topLeft.y + box.height; y++) {
+      for (let x = box.topLeft.x; x < box.topLeft.x + box.width; x++) {
+        if (this.inBounds(x, y)) claimed[y][x] = true
+      }
+    }
+  }
+
+  hasClaimedOverlap(box, claimed) {
+    for (let y = box.topLeft.y; y < box.topLeft.y + box.height; y++) {
+      for (let x = box.topLeft.x; x < box.topLeft.x + box.width; x++) {
+        if (this.inBounds(x, y) && claimed[y][x]) return true
+      }
+    }
+    return false
+  }
+
+  countClaimedOnEdge(box, claimed, edge) {
+    let count = 0
+
+    if (edge === "left" || edge === "right") {
+      const x = edge === "left" ? box.topLeft.x : box.topLeft.x + box.width - 1
+      for (let y = box.topLeft.y; y < box.topLeft.y + box.height; y++) {
+        if (this.inBounds(x, y) && claimed[y][x]) count++
+      }
+      return count
+    }
+
+    const y = edge === "top" ? box.topLeft.y : box.topLeft.y + box.height - 1
+    for (let x = box.topLeft.x; x < box.topLeft.x + box.width; x++) {
+      if (this.inBounds(x, y) && claimed[y][x]) count++
+    }
+    return count
+  }
+
+  shrinkBoxToAvoidClaimed(box, claimed) {
+    const current = {
+      topLeft: { x: box.topLeft.x, y: box.topLeft.y },
+      width: box.width,
+      height: box.height
+    }
+
+    const clampX0 = Math.max(0, current.topLeft.x)
+    const clampY0 = Math.max(0, current.topLeft.y)
+    const clampX1 = Math.min(this.width - 1, current.topLeft.x + current.width - 1)
+    const clampY1 = Math.min(this.height - 1, current.topLeft.y + current.height - 1)
+    current.topLeft.x = clampX0
+    current.topLeft.y = clampY0
+    current.width = clampX1 - clampX0 + 1
+    current.height = clampY1 - clampY0 + 1
+
+    if (current.width <= 0 || current.height <= 0) return null
+
+    const maxSteps = this.width + this.height
+    let steps = 0
+
+    while (this.hasClaimedOverlap(current, claimed) && steps < maxSteps) {
+      if (current.width <= 1 || current.height <= 1) return null
+
+      const edges = [
+        { edge: "left", overlap: this.countClaimedOnEdge(current, claimed, "left") },
+        { edge: "right", overlap: this.countClaimedOnEdge(current, claimed, "right") },
+        { edge: "top", overlap: this.countClaimedOnEdge(current, claimed, "top") },
+        { edge: "bottom", overlap: this.countClaimedOnEdge(current, claimed, "bottom") },
+      ]
+
+      edges.sort((a, b) => b.overlap - a.overlap)
+      const chosen = edges[0].edge
+
+      if (chosen === "left") {
+        current.topLeft.x += 1
+        current.width -= 1
+      } else if (chosen === "right") {
+        current.width -= 1
+      } else if (chosen === "top") {
+        current.topLeft.y += 1
+        current.height -= 1
+      } else {
+        current.height -= 1
+      }
+
+      steps++
+    }
+
+    if (current.width <= 0 || current.height <= 0) return null
+    return current
+  }
+
+  inBounds(x, y) {
+    return x >= 0 && x < this.width && y >= 0 && y < this.height
   }
   
   // generates background (ground) layer (in one pass, no hierarchical approach here)

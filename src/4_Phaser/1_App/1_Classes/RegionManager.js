@@ -49,10 +49,11 @@ export default class RegionManager {
 
     // regenerate
     // WFC: call region-specific model
-    const gen = this.generators[region.type](region.boundingBox)
+    const gen = this.generators[region.type](region)
     
     if (!gen) {
-      console.warn(`Structure generation failed: ${structure.type} at (${region.topLeft.x}, ${region.topLeft.y})`)
+      console.warn(`Structure generation failed: ${region.type} at (${region.boundingBox.topLeft.x}, ${region.boundingBox.topLeft.y})`)
+      return
     }
     
     // put generated tiles in final tilemap 
