@@ -98,9 +98,16 @@ for (const type in conf.structures) {
 
 	// set activeButton to clicked button and change stroke attributes
 	button.onclick = () => {
+		// Remove active from all structure buttons
+		for (const t in conf.structures) {
+			const b = document.getElementById(`${t.toLowerCase()}-button`);
+			if (b) b.classList.remove("active");
+		}
+		
 		mouseObject.mouse.hue = structure.color;
 		button.style.borderColor = structure.color;  
 		activeButton = type;
+		button.classList.add("active");
 	}
 }
 // Default to 'house' for initial selected marker
