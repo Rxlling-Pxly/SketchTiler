@@ -52,7 +52,8 @@ export default class RegionManager {
     const gen = this.generators[region.type](region.boundingBox)
     
     if (!gen) {
-      console.warn(`Structure generation failed: ${structure.type} at (${region.topLeft.x}, ${region.topLeft.y})`)
+      console.warn(`Structure generation failed: ${region.type} at (${region.boundingBox.topLeft.x}, ${region.boundingBox.topLeft.y})`)
+      return
     }
     
     // put generated tiles in final tilemap 
