@@ -49,7 +49,7 @@ export default class RegionManager {
 
     // regenerate
     // WFC: call region-specific model
-    const gen = this.generators[region.type](region)
+    const gen = this.generators[region.type](region.boundingBox)
     
     if (!gen) {
       console.warn(`Structure generation failed: ${region.type} at (${region.boundingBox.topLeft.x}, ${region.boundingBox.topLeft.y})`)
