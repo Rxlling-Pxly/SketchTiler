@@ -89,13 +89,15 @@ for (const type in conf.structures) {
   if (!button) continue;
 
   button.onclick = () => {
+    // Ensure only one structure button is active at a time.
+    for (const t in conf.structures) {
+      const b = document.getElementById(`${t.toLowerCase()}-button`);
+      if (b) b.classList.remove("active");
+    }
+
     mouseObject.mouse.hue = structure.color;
     button.style.borderColor = structure.color;
     activeButton = type;
-
-    if (currentActiveButton && currentActiveButton !== button) {
-      currentActiveButton.classList.remove("active");
-    }
     button.classList.add("active");
     currentActiveButton = button;
   };

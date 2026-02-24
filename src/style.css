@@ -373,6 +373,8 @@
 
 .undo_button:hover {
   transform: translateY(-5px);
+  background-color: white;
+  color: #333;
 }
 
 .long_button:hover {
