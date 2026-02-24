@@ -337,8 +337,8 @@
 }
 
 .house_button.active {
-  background-color: #222;
-  color: white;
+  background-color: #DA6969;
+  color: #222;
 }
 
 .forest_button:hover {
@@ -347,8 +347,8 @@
 }
 
 .forest_button.active {
-  background-color: #222;
-  color: white;
+  background-color: #59B383;
+  color: #333;
 }
 
 .path_button:hover {
@@ -367,8 +367,8 @@
 }
 
 .fence_button.active {
-  background-color: #222;
-  color: white;
+  background-color: #7484A6;
+  color: #222;
 }
 
 .undo_button:hover {
