@@ -17,15 +17,18 @@ export default function generateLayout(regions, detectStructuresID, placeStructu
     const model = new WFCModel().learn(layouts, 2);
 
     for (let type in regions) {
+        const typeLower = type.toLowerCase();
+        if (!colortiles[typeLower]) continue;
+
         for (let box of regions[type]) {
             if (Array.isArray(box)) {
                 // trace
                 for (let point of box) {
-                    model.setTile(point.x, point.y, colortiles[type.toLowerCase()].FILL);
+                    safeSetTile(model, point.x, point.y, colortiles[typeLower].FILL);
                 }
             } else {
                 // box
-                placeStructureInLayout(type.toLowerCase(), box, model);
+                placeStructureInLayout(typeLower, box, model);
             }
         }
     }
@@ -104,6 +107,8 @@ function learnLayout(detectStructuresID, placeStructuresID, minStructreSize, pre
 }
 
 function placeStructureInLayout(type, boundingBox, model) {
+    if (!colortiles[type] || !boundingBox || !boundingBox.topLeft || !boundingBox.bottomRight) return;
+
     const tlX = boundingBox.topLeft.x;
     const tlY = boundingBox.topLeft.y;
     const brX = boundingBox.bottomRight.x;
@@ -113,21 +118,30 @@ function placeStructureInLayout(type, boundingBox, model) {
     const h = boundingBox.height;
 
     // place corners
-    model.setTile(tlX, tlY, colortiles[type].TOP_LEFT);
-    model.setTile(brX, tlY, colortiles[type].TOP_RIGHT);
-    model.setTile(tlX, brY, colortiles[type].BOTTOM_LEFT);
-    model.setTile(brX, brY, colortiles[type].BOTTOM_RIGHT);
+    safeSetTile(model, tlX, tlY, colortiles[type].TOP_LEFT);
+    safeSetTile(model, brX, tlY, colortiles[type].TOP_RIGHT);
+    safeSetTile(model, tlX, brY, colortiles[type].BOTTOM_LEFT);
+    safeSetTile(model, brX, brY, colortiles[type].BOTTOM_RIGHT);
 
     // place borders
     // top and bottom
     for (let x = tlX + 1; x < brX; x++) {
-        model.setTile(x, tlY, colortiles[type].TOP);
-        model.setTile(x, brY, colortiles[type].BOTTOM);
+        safeSetTile(model, x, tlY, colortiles[type].TOP);
+        safeSetTile(model, x, brY, colortiles[type].BOTTOM);
     }
 
     // left and right
     for (let y = tlY + 1; y < brY; y++) {
-        model.setTile(tlX, y, colortiles[type].LEFT);
-        model.setTile(brX, y, colortiles[type].RIGHT);
+        safeSetTile(model, tlX, y, colortiles[type].LEFT);
+        safeSetTile(model, brX, y, colortiles[type].RIGHT);
     }
+}
+
+function inBounds(x, y) {
+    return x >= 0 && x < tilesetInfo.WIDTH && y >= 0 && y < tilesetInfo.HEIGHT;
+}
+
+function safeSetTile(model, x, y, tileIDs) {
+    if (!inBounds(x, y)) return;
+    model.setTile(x, y, tileIDs);
 }

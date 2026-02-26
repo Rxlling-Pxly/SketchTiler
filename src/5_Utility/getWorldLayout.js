@@ -271,6 +271,9 @@ export default class Layout{
                 
                 // skip if current structure higher priority
                 if(currentPriority > higherPriority) continue;
+
+                // Fence is a container structure: allow overlap with other structure types.
+                if (this.canStructuresOverlap(currentStructure, higherPriorityStructure)) continue;
                 
                 // check for overlap
                 if(this.isOverlapping(currentStructure.boundingBox, higherPriorityStructure.boundingBox)){
@@ -304,6 +307,10 @@ export default class Layout{
         
         // remove structures that became empty after overlap handling
         this.worldFacts = this.worldFacts.filter(structure => !structure.isEmpty);
+    }
+
+    canStructuresOverlap(structureA, structureB) {
+        return structureA.type === "fence" || structureB.type === "fence";
     }
 
     // check if two bounding boxes overlap

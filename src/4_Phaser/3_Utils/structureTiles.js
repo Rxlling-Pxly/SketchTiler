@@ -20,7 +20,8 @@ const STRUCTURE_TILES = {
                 69, 70, 71, 72,
                 81, 82, 83
             ],
-            priority: 3
+            // Keep fence behind other structures so it can contain them.
+            priority: -1
         },
         house: {
             regionType: "box",

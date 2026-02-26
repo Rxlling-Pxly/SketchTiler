@@ -499,6 +499,12 @@ export default class Autotiler extends Phaser.Scene {
   trimOverlappingFacts(sortedFacts) {
     const claimed = Array.from({ length: this.height }, () => Array(this.width).fill(false))
     const result = []
+    const fenceFacts = sortedFacts.filter((fact) => fact.type === "fence" && fact.boundingBox)
+
+    // Fence acts like a boundary: only its border blocks overlap.
+    for (const fence of fenceFacts) {
+      this.markFenceBorderClaimed(fence.boundingBox, claimed)
+    }
 
     for (const fact of sortedFacts) {
       const typeInfo = STRUCTURE_TILES["tiny_town"][fact.type]
@@ -524,6 +530,12 @@ export default class Autotiler extends Phaser.Scene {
         continue
       }
 
+      // Fence is allowed to overlap (contain) other structures; keep its box intact.
+      if (factCopy.type === "fence") {
+        result.push(factCopy)
+        continue
+      }
+
       const trimmedBox = this.shrinkBoxToAvoidClaimed(factCopy.boundingBox, claimed)
       if (!trimmedBox) continue
 
@@ -533,6 +545,22 @@ export default class Autotiler extends Phaser.Scene {
     }
 
     return result
+  }
+
+  markFenceBorderClaimed(box, claimed) {
+    const left = box.topLeft.x
+    const right = box.topLeft.x + box.width - 1
+    const top = box.topLeft.y
+    const bottom = box.topLeft.y + box.height - 1
+
+    for (let x = left; x <= right; x++) {
+      if (this.inBounds(x, top)) claimed[top][x] = true
+      if (this.inBounds(x, bottom)) claimed[bottom][x] = true
+    }
+    for (let y = top; y <= bottom; y++) {
+      if (this.inBounds(left, y)) claimed[y][left] = true
+      if (this.inBounds(right, y)) claimed[y][right] = true
+    }
   }
 
   trimTraceAgainstClaimed(trace, claimed) {
